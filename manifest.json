@@ -1,0 +1,11 @@
+{
+  "name": "État des Lieux",
+  "short_name": "EDL",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0f1e",
+  "theme_color": "#0a0f1e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f1e">
+<link rel="manifest" href="manifest.json">
+<title>EDL — État des Lieux</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0f1e;--card:#131a2e;--card2:#1a2240;--border:#222d4a;--text:#e8ecf4;--muted:#8893ab;--dim:#5a6580;--blue:#3b7dff;--blue2:#2860d8;--green:#22c55e;--green-d:#166534;--amber:#f59e0b;--amber-d:#92400e;--red:#ef4444;--red-d:#991b1b;--radius:14px;--radius-sm:10px}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:14px;min-height:100dvh;max-width:520px;margin:0 auto;position:relative;overflow-x:hidden}
+input,textarea,button,select{font-family:inherit;font-size:14px}
+a{color:var(--blue);text-decoration:none}
+.hdr{display:flex;align-items:center;gap:10px;padding:16px 16px 14px;background:var(--bg);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border)}
+.hdr h1{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-sub{font-size:12px;color:var(--dim)}
+.hdr-back{background:none;border:none;color:var(--blue);font-size:26px;cursor:pointer;padding:0 4px;line-height:1}
+.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.save-ind{position:fixed;top:14px;right:14px;z-index:99;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;transition:all .3s;pointer-events:none;opacity:0}
+.save-ind.saved{background:#166534;color:#6ee7b7;opacity:1}
+.save-ind.saving{background:#92400e;color:#fbbf24;opacity:1}
+.tabs{display:flex;overflow-x:auto;gap:0;border-bottom:1px solid var(--border);background:var(--card);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;background:none;border-top:none;border-left:none;border-right:none}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.content{padding:14px 16px 100px}
+.card{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;cursor:pointer;border:1px solid var(--border);transition:border-color .2s}
+.card:active{border-color:var(--blue)}.card-static{cursor:default}.card-static:active{border-color:var(--border)}
+.form-card{background:var(--card);border-radius:var(--radius);padding:18px;margin-bottom:10px;border:1px solid var(--blue)33}
+.input{width:100%;padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;margin-bottom:10px;outline:none}
+.input:focus{border-color:var(--blue)}
+.textarea{width:100%;padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;resize:vertical;outline:none}
+.textarea:focus{border-color:var(--blue)}
+.label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;display:block}
+.field{margin-bottom:14px}
+.toggle-row{display:flex;gap:8px;margin-bottom:14px}
+.toggle-btn{flex:1;padding:10px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;text-align:center;border:1px solid var(--border);background:var(--card);color:var(--dim)}
+.toggle-btn.t-e{background:#065f4622;color:#6ee7b7;border-color:#065f46}
+.toggle-btn.t-s{background:#7c2d1222;color:#fdba74;border-color:#7c2d12}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block}
+.badge-e{background:#065f46;color:#6ee7b7}.badge-s{background:#7c2d12;color:#fdba74}
+.badge-w{background:#92400e44;color:var(--amber);font-size:10px;padding:2px 8px}
+.btn{padding:10px 20px;border-radius:var(--radius-sm);border:none;font-size:14px;font-weight:600;cursor:pointer;text-align:center;width:100%}
+.btn:active{opacity:.8}
+.btn-p{background:var(--blue);color:#fff}
+.btn-s{background:var(--border);color:var(--muted);font-weight:500}
+.btn-d{background:var(--red-d);color:#fca5a5;font-weight:500;font-size:13px}
+.btn-row{display:flex;gap:8px}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto}
+.room-tabs{display:flex;overflow-x:auto;gap:6px;padding:0 0 10px;scrollbar-width:none}
+.room-tabs::-webkit-scrollbar{display:none}
+.room-tab{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--dim);white-space:nowrap;flex-shrink:0}
+.room-tab.active{border-color:var(--blue);color:var(--blue);background:var(--blue)11}
+.room-tab-add{border-style:dashed;color:var(--blue)}
+.el-card{background:var(--card);border-radius:var(--radius);padding:0;margin-bottom:6px;border:1px solid var(--border);overflow:hidden}
+.el-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:12px 14px}
+.el-dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
+.el-name{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.el-det{padding:0 14px 14px;border-top:1px solid var(--border)}
+.ec{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 14px}
+.ech{padding:5px 11px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:500;border:1px solid var(--border);background:var(--bg);color:var(--dim);user-select:none}
+.pb{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}
+.pw{position:relative;width:68px;height:68px;flex-shrink:0}
+.pt{width:68px;height:68px;border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--border);cursor:pointer;background:var(--bg);display:block}
+.pd{position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:10px;background:var(--red-d);color:#fca5a5;border:2px solid var(--card);font-size:11px;line-height:16px;text-align:center;cursor:pointer}
+.pa{width:68px;height:68px;border-radius:var(--radius-sm);border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--dim);font-size:16px;flex-shrink:0;background:var(--bg)}
+.pa:active{border-color:var(--blue);color:var(--blue)}
+.lb{position:fixed;inset:0;background:#000e;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.lb img{max-width:95vw;max-height:70vh;border-radius:8px;object-fit:contain}
+.lb-x{position:absolute;top:12px;right:16px;background:none;border:none;color:#fff;font-size:36px;cursor:pointer}
+.lb-bar{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+.lb-btn{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer}
+.ann-ov{position:fixed;inset:0;background:#000;z-index:110;display:flex;flex-direction:column}
+.ann-cw{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.ann-cw canvas{max-width:100%;max-height:100%}
+.ann-tb{display:flex;gap:6px;padding:10px 14px;background:#111;justify-content:center;flex-wrap:wrap}
+.ann-t{padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #333;background:#222;color:#aaa;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.ann-t.active{border-color:var(--blue);color:var(--blue);background:#1a2240}
+.sig-pad{border:2px dashed var(--border);border-radius:var(--radius-sm);background:#fff;touch-action:none;cursor:crosshair;display:block;margin:6px 0;width:100%;max-width:360px}
+.sig-prev{max-width:200px;max-height:80px;border:1px solid var(--border);border-radius:8px;background:#fff;display:block;margin:4px 0}
+.sr{margin-bottom:16px}.sr-t{font-weight:700;font-size:15px;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.se{display:flex;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)11}
+.se-n{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.se-c{min-width:80px;text-align:center;font-size:12px;font-weight:500}
+.diff-r{background:#f59e0b11;border-left:3px solid var(--amber);padding:6px 8px;border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.diff-b{font-size:10px;background:var(--amber-d);color:var(--amber);padding:1px 6px;border-radius:8px;margin-left:6px}
+.fb{display:flex;gap:6px;margin-bottom:12px}
+.fb-b{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--dim)}
+.fb-b.active{border-color:var(--amber);color:var(--amber);background:var(--amber)11}
+.ex-c{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:10px;border:1px solid var(--border)}
+.ex-c h3{font-size:14px;font-weight:700;margin-bottom:4px}.ex-c p{font-size:12px;color:var(--dim);margin-bottom:10px}
+.ck-r{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)33}
+.ck-l{flex:1;font-size:13px}
+.ck-i{width:90px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center}
+.fab{position:fixed;bottom:24px;right:24px;min-width:56px;height:56px;border-radius:28px;background:var(--blue);color:#fff;font-size:28px;border:none;cursor:pointer;box-shadow:0 4px 20px #3b7dff44;display:flex;align-items:center;justify-content:center;z-index:20;padding:0 20px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--card2);color:var(--text);padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;box-shadow:0 4px 20px #00000066;z-index:30;animation:fu .25s}
+@keyframes fu{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.ov{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}
+.mo{background:var(--card);border-radius:var(--radius);padding:24px;max-width:360px;width:100%;border:1px solid var(--border)}
+@media print{body{background:#fff;color:#000;max-width:none;font-size:11px}.hdr,.tabs,.fab,.pa,.pd,.btn,.btn-row,.ov,.toast,.save-ind,.ann-tb,.fb{display:none!important}.content{padding:0}.card,.el-card,.form-card,.ex-c{background:#fff;border:1px solid #ddd;break-inside:avoid}.el-det{display:block!important}.pt{width:50px;height:50px}.sig-pad{display:none}@page{margin:15mm}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="save-ind" id="si"></div>
+<input type="file" id="ci" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="gi" accept="image/*" multiple style="display:none">
+<input type="file" id="ji" accept=".json" style="display:none">
+<script>
+const T={"Entrée / Couloir":["Sol","Plinthes","Murs","Plafond","Porte d'entrée","Serrure","Interphone/Digicode","Boîte aux lettres","Patère/Porte-manteau","Interrupteur(s)","Prise(s) électrique(s)","Éclairage","Détecteur fumée"],"Salon / Séjour":["Sol","Plinthes","Murs","Plafond","Porte","Fenêtre(s) + vitrage","Volets / Stores","Interrupteur(s)","Prise(s) électrique(s)","Éclairage / Luminaire","Radiateur / Chauffage"],"Cuisine":["Sol","Plinthes","Murs","Plafond","Porte","Fenêtre(s) + vitrage","Volets / Stores","Plan de travail","Évier","Robinetterie","Plaques de cuisson","Four","Hotte","Réfrigérateur","Lave-vaisselle","Placards hauts","Placards bas","Crédence","VMC","Interrupteur(s)","Prise(s) électrique(s)","Éclairage"],"Chambre":["Sol","Plinthes","Murs","Plafond","Porte","Fenêtre(s) + vitrage","Volets / Stores","Interrupteur(s)","Prise(s) électrique(s)","Éclairage / Luminaire","Radiateur / Chauffage","Placard/Penderie","Étagères","Tringle"],"Salle de bain":["Sol","Plinthes","Murs","Plafond","Porte","Baignoire OU Douche","Paroi/Rideau","Lavabo","Robinetterie","Miroir","Sèche-serviettes","VMC/Ventilation","Joints silicone","Carrelage mural","Interrupteur(s)","Prise(s) électrique(s)","Éclairage"],"WC":["Sol","Plinthes","Murs","Plafond","Porte","Cuvette","Abattant","Chasse d'eau","Porte-rouleau","Lave-mains","Interrupteur(s)","Éclairage"],"Balcon / Terrasse":["Sol / Revêtement","Garde-corps","Évacuation eau","Éclairage extérieur","Prise extérieure"],"Cave / Parking":["Sol","Murs","Plafond","Porte","Éclairage","Ventilation"],"Pièce personnalisée":["Sol","Plinthes","Murs","Plafond","Porte","Interrupteur(s)","Prise(s) électrique(s)","Éclairage"]};
+const ET=["Neuf","Bon","Usure normale","Dégradé","Mauvais","N/A"];
+const EC={"Neuf":"#22c55e","Bon":"#4ade80","Usure normale":"#f59e0b","Dégradé":"#ef4444","Mauvais":"#dc2626","N/A":"#64748b","—":"#475569"};
+const CK=[{id:"keys",l:"Clés remises",t:"number"},{id:"badges",l:"Badges / Bips",t:"number"},{id:"telecommandes",l:"Télécommandes",t:"number"},{id:"water",l:"Compteur eau",t:"number"},{id:"elec",l:"Compteur élec",t:"number"},{id:"gas",l:"Compteur gaz",t:"number"},{id:"boilerBrand",l:"Marque chaudière",t:"text"},{id:"boilerDate",l:"Entretien chaudière",t:"date"},{id:"daaf",l:"Détecteur fumée",t:"check"},{id:"extincteur",l:"Extincteur",t:"check"},{id:"interphone",l:"Interphone OK",t:"check"},{id:"bal",l:"Boîte aux lettres OK",t:"check"},{id:"parkNum",l:"N° parking",t:"text"},{id:"caveNum",l:"N° cave",t:"text"}];
+
+let S={edls:[],view:"list",cur:null,cr:0,exp:{},showNew:false,showAR:false,showAE:false,cdel:null,fDiff:false,nType:"Entrée",showSTpl:false};
+let pTgt=null,selTp=null;
+
+// IndexedDB
+let db;
+const odb=()=>new Promise((ok,no)=>{const r=indexedDB.open("edl-ph-v3",1);r.onupgradeneeded=e=>e.target.result.createObjectStore("p",{keyPath:"id"});r.onsuccess=e=>{db=e.target.result;ok()};r.onerror=no});
+const sP=(id,d)=>new Promise(ok=>{const tx=db.transaction("p","readwrite");tx.objectStore("p").put({id,d});tx.oncomplete=ok});
+const gP=id=>new Promise(ok=>{const tx=db.transaction("p","readonly");const r=tx.objectStore("p").get(id);r.onsuccess=()=>ok(r.result?.d||null);r.onerror=()=>ok(null)});
+const dP=id=>new Promise(ok=>{const tx=db.transaction("p","readwrite");tx.objectStore("p").delete(id);tx.oncomplete=ok});
+
+const LK="edl-v7",TK="edl-tpl-v1";
+const ld=()=>{try{return JSON.parse(localStorage.getItem(LK))||[]}catch{return[]}};
+const ldT=()=>{try{return JSON.parse(localStorage.getItem(TK))||[]}catch{return[]}};
+const svT=t=>localStorage.setItem(TK,JSON.stringify(t));
+const h=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const pid=()=>"p"+Date.now()+"_"+Math.random().toString(36).substr(2,6);
+const uid2=()=>"e"+Date.now()+"_"+Math.random().toString(36).substr(2,6);
+const ts=m=>{const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)};
+const nw=()=>new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+const tAgo=ts2=>{if(!ts2)return"";const d=Date.now()-ts2,m=Math.floor(d/60000);if(m<1)return"à l'instant";if(m<60)return m+"min";const hr=Math.floor(m/60);if(hr<24)return hr+"h";return Math.floor(hr/24)+"j"};
+
+let svTO;
+function autoSave(){clearTimeout(svTO);showSI("saving");svTO=setTimeout(()=>{if(S.cur!==null&&S.edls[S.cur])S.edls[S.cur]._lm=Date.now();localStorage.setItem(LK,JSON.stringify(S.edls));showSI("saved")},400)}
+function showSI(s){const el=document.getElementById("si");el.className="save-ind "+s;el.textContent=s==="saved"?"✓ Sauvegardé":"⏳ Sauvegarde...";if(s==="saved")setTimeout(()=>{el.style.opacity="0"},1500)}
+
+const comp=(f,mx=800,q=0.7)=>new Promise(ok=>{const r=new FileReader();r.onload=e=>{const i=new Image();i.onload=()=>{const c=document.createElement("canvas");let w=i.width,ht=i.height;if(w>mx){ht=ht*(mx/w);w=mx}c.width=w;c.height=ht;const ctx=c.getContext("2d");ctx.drawImage(i,0,0,w,ht);const stamp=nw()+" — "+(cRoom()?.name||"");ctx.fillStyle="rgba(0,0,0,0.5)";ctx.fillRect(0,ht-22,w,22);ctx.fillStyle="#fff";ctx.font="bold 11px sans-serif";ctx.fillText(stamp,6,ht-7);ok(c.toDataURL("image/jpeg",q))};i.src=e.target.result};r.readAsDataURL(f)});
+const mkEl=n=>({name:n,eE:"—",oE:"",pE:[],eS:"—",oS:"",pS:[]});
+const cEdl=()=>S.edls[S.cur];
+const cRoom=()=>{const e=cEdl();return e?.rooms?.[S.cr]||null};
+const ring=(p,l,c)=>{const r=22,ci=2*Math.PI*r;return`<div style="text-align:center"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="${r}" fill="none" stroke="var(--border)" stroke-width="4.5"/><circle cx="27" cy="27" r="${r}" fill="none" stroke="${c}" stroke-width="4.5" stroke-dasharray="${ci}" stroke-dashoffset="${ci-ci*p/100}" stroke-linecap="round" transform="rotate(-90 27 27)"/><text x="27" y="31" text-anchor="middle" fill="var(--text)" font-size="12" font-weight="700">${p}%</text></svg><div style="font-size:10px;color:var(--dim);margin-top:2px">${l}</div></div>`};
+const prog=e=>{let tE=0,dE=0,tS=0,dS=0;e.rooms.forEach(r=>r.elements.forEach(el=>{tE++;tS++;if(el.eE&&el.eE!=="—")dE++;if(el.eS&&el.eS!=="—")dS++}));return{pE:tE?Math.round(dE/tE*100):0,pS:tS?Math.round(dS/tS*100):0}};
+
+function R(){const a=document.getElementById("app");
+switch(S.view){case"list":a.innerHTML=rList();break;case"edit":a.innerHTML=rEdit();break;case"rooms":a.innerHTML=rRooms();break;case"check":a.innerHTML=rCheck();break;case"sigs":a.innerHTML=rSigs();break;case"sum":a.innerHTML=rSum();break;case"exp":a.innerHTML=rExp();break}
+B();lTh()}
+
+// ── TABS helper ──
+function tabs(active){
+return`<div class="tabs"><button class="tab ${active==="edit"?"active":""}" data-a="goEdit">Infos</button><button class="tab ${active==="rooms"?"active":""}" data-a="goRooms">Pièces</button><button class="tab ${active==="check"?"active":""}" data-a="goCheck">Checklist</button><button class="tab ${active==="sigs"?"active":""}" data-a="goSigs">Signatures</button><button class="tab ${active==="sum"?"active":""}" data-a="goSum">Résumé</button><button class="tab ${active==="exp"?"active":""}" data-a="goExp">Export</button></div>`}
+
+// ── LIST ──
+function rList(){
+let cards=S.edls.map((e,i)=>{const np=e.rooms.reduce((s,r)=>s+r.elements.reduce((s2,el)=>s2+(el.pE?.length||0)+(el.pS?.length||0),0),0);const ne=(e._lm||0)>(e._le||0);const wb=ne?`<span class="badge-w badge" style="margin-left:4px">⚠ Non exporté${e._lm?" — "+tAgo(e._lm):""}</span>`:"";
+return`<div class="card" data-a="oEdl" data-i="${i}"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;margin-bottom:3px">${h(e.name||"Sans nom")}${wb}</div><div style="font-size:12px;color:var(--muted)">${h(e.address||"")}</div><div style="font-size:12px;color:var(--dim);margin-top:4px">${e.rooms.length} pièce${e.rooms.length>1?"s":""} · ${e.date||"—"}${np?" · 📷"+np:""}</div></div><span class="badge badge-${e.type==="Entrée"?"e":"s"}">${e.type}</span></div><div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-s btn-sm" data-a="dup" data-i="${i}" onclick="event.stopPropagation()">Dupliquer</button><button class="btn btn-s btn-sm" data-a="expQ" data-i="${i}" onclick="event.stopPropagation()">Exporter</button><button class="btn btn-d btn-sm" data-a="askDel" data-i="${i}" onclick="event.stopPropagation()">Supprimer</button></div></div>`}).join("");
+if(!S.edls.length&&!S.showNew)cards=`<div style="text-align:center;margin-top:80px"><div style="font-size:48px;margin-bottom:12px">📋</div><p style="color:var(--muted)">Aucun état des lieux</p><p style="color:var(--dim);font-size:13px;margin-top:4px">Appuyez sur + pour commencer</p></div>`;
+let nf="";
+if(S.showNew){const eEdls=S.edls.filter(e=>e.type==="Entrée").map(e=>`<option value="${S.edls.indexOf(e)}">${h(e.name)} (${e.date})</option>`).join("");const uT=ldT();const tO=uT.length?uT.map((t,ti)=>`<option value="t${ti}">${h(t.name)}</option>`).join(""):"";
+nf=`<div class="form-card"><div style="font-weight:700;font-size:15px;margin-bottom:14px">Nouvel EDL</div><div class="toggle-row"><button class="toggle-btn ${S.nType==="Entrée"?"t-e":""}" data-a="sNT" data-t="Entrée">Entrée</button><button class="toggle-btn ${S.nType==="Sortie"?"t-s":""}" data-a="sNT" data-t="Sortie">Sortie</button></div>${S.nType==="Sortie"&&eEdls?`<div class="field"><label class="label">Lier à un EDL Entrée</label><select class="input" id="lnk"><option value="">— Aucun —</option>${eEdls}</select></div>`:""}${tO?`<div class="field"><label class="label">Depuis template</label><select class="input" id="fTpl"><option value="">— Aucun —</option>${tO}</select></div>`:""}<div class="field"><label class="label">Adresse</label><input class="input" id="nA" placeholder="12 rue..."></div><div class="field"><label class="label">Nom</label><input class="input" id="nN" placeholder="Appt F3"></div><div class="btn-row"><button class="btn btn-s" data-a="cNew" style="flex:1">Annuler</button><button class="btn btn-p" data-a="svNew" style="flex:1">Créer</button></div></div>`}
+let mo="";if(S.cdel!==null)mo=`<div class="ov" data-a="cDel"><div class="mo" onclick="event.stopPropagation()"><p style="font-size:15px;font-weight:700;margin-bottom:16px">Supprimer cet EDL ?</p><div class="btn-row"><button class="btn btn-s" data-a="cDel" style="flex:1">Annuler</button><button class="btn btn-d" data-a="xDel" style="flex:1">Supprimer</button></div></div></div>`;
+return`<div class="hdr"><div style="flex:1"><h1>📋 États des lieux</h1><div class="hdr-sub">${S.edls.length} doc${S.edls.length>1?"s":""}</div></div><div class="hdr-right"><button class="btn btn-s btn-sm" data-a="impJ">📥 Importer</button></div></div><div class="content">${cards}${nf}</div>${S.showNew?"":'<button class="fab" data-a="shNew">+</button>'}${mo}`}
+
+// ── EDIT ──
+function rEdit(){const e=cEdl();if(!e)return"";
+const flds=[["Type","toggle"],["Date","date","date"],["Adresse","address","text"],["Surface (m²)","surface","number"],["Étage","floor","text"],["Locataire","tenant","text"],["Tél. locataire","phone","tel"],["Email locataire","email","email"],["Bailleur","owner","text"]];
+let html=flds.map(f=>{if(f[0]==="Type")return`<div class="field"><label class="label">Type</label><div class="toggle-row" style="margin-bottom:0"><button class="toggle-btn ${e.type==="Entrée"?"t-e":""}" data-a="sTyp" data-t="Entrée">Entrée</button><button class="toggle-btn ${e.type==="Sortie"?"t-s":""}" data-a="sTyp" data-t="Sortie">Sortie</button></div></div>`;return`<div class="field"><label class="label">${f[0]}</label><input class="input" type="${f[2]}" value="${h(e[f[1]]||"")}" data-a="chF" data-f="${f[1]}"></div>`}).join("");
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">${h(e.address)}</div></div></div>${tabs("edit")}<div class="content"><div class="form-card">${html}</div></div>`}
+
+// ── CHECKLIST ──
+function rCheck(){const e=cEdl();if(!e)return"";if(!e.ck)e.ck={};
+const items=CK.map(it=>{const v=e.ck[it.id]||"";let inp;if(it.t==="check")inp=`<button class="ech" data-a="tCk" data-c="${it.id}" style="${v?"background:var(--green)22;color:var(--green);border-color:var(--green)":""}">${v?"✓ OK":"—"}</button>`;else inp=`<input class="ck-i" type="${it.t==="date"?"date":it.t==="number"?"number":"text"}" value="${h(v)}" data-a="chCk" data-c="${it.id}">`;return`<div class="ck-r"><span class="ck-l">${h(it.l)}</span>${inp}</div>`}).join("");
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">Checklist</div></div></div>${tabs("check")}<div class="content"><div class="form-card"><div style="font-weight:700;margin-bottom:10px">Clés, compteurs & équipements</div>${items}</div></div>`}
+
+// ── SIGNATURES ──
+function rSigs(){const e=cEdl();if(!e)return"";if(!e.sigs)e.sigs={};
+const mkSig=(who,label,name)=>{if(e.sigs[who])return`<img class="sig-prev" src="${e.sigs[who]}"><div style="font-size:11px;color:var(--dim);margin-bottom:6px">Signé le ${e.sigs[who+"D"]||"—"}</div><button class="btn btn-d btn-sm" data-a="clrSig" data-w="${who}">Effacer</button>`;return`<canvas class="sig-pad" id="sig_${who}" width="360" height="160"></canvas><div class="btn-row"><button class="btn btn-s btn-sm" data-a="rstSig" data-w="${who}" style="flex:1">Effacer</button><button class="btn btn-p btn-sm" data-a="svSig" data-w="${who}" style="flex:1">Valider</button></div>`};
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">Signatures</div></div></div>${tabs("sigs")}<div class="content"><div class="form-card"><div class="label">Locataire — ${h(e.tenant||"")}</div><p style="font-size:11px;color:var(--dim);margin-bottom:8px">Lu et approuvé</p>${mkSig("loc","Locataire",e.tenant)}</div><div class="form-card"><div class="label">Bailleur — ${h(e.owner||"")}</div><p style="font-size:11px;color:var(--dim);margin-bottom:8px">Lu et approuvé</p>${mkSig("bail","Bailleur",e.owner)}</div></div>`}
+
+// ── ROOMS ──
+function rRooms(){const e=cEdl();if(!e)return"";const isE=e.type==="Entrée";
+const rtabs=e.rooms.map((r,ri)=>{const f=r.elements.filter(el=>{const v=isE?el.eE:el.eS;return v&&v!=="—"}).length;return`<button class="room-tab ${ri===S.cr?"active":""}" data-a="sR" data-ri="${ri}">${h(r.name)} <span style="font-size:11px;color:var(--dim)">${f}/${r.elements.length}</span></button>`}).join("");
+let rc="";const rm=cRoom();
+if(rm){
+const rph=(rm.photos||[]).map((p,pi)=>`<div class="pw"><img class="pt" data-a="oPh" data-pid="${p}" data-ctx="room" data-pi="${pi}" id="th_${p}" src=""><div class="pd" data-a="dRP" data-pid="${p}" data-pi="${pi}">×</div></div>`).join("");
+const rps=`<div style="margin-bottom:12px"><div class="label">Photos générales — ${h(rm.name)}</div><div class="pb">${rph}<div class="pa" data-a="rCam">📷</div><div class="pa" data-a="rGal">🖼</div></div></div>`;
+
+const els=rm.elements.map((el,ei)=>{const et=isE?el.eE:el.eS,ob=isE?el.oE:el.oS,co=EC[et]||"#475569",ex=!!S.exp[ei],pk=isE?"pE":"pS",ph=el[pk]||[];
+let det="";if(ex){
+const ch=ET.map(o=>`<button class="ech" data-a="sEt" data-ei="${ei}" data-v="${h(o)}" style="${et===o?`background:${EC[o]}22;color:${EC[o]};border-color:${EC[o]}`:""}">${o}</button>`).join("");
+const oE=isE?el.eS:el.eE,oO=isE?el.oS:el.oE;let pv="";if(oE&&oE!=="—")pv=`<div style="margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:8px;font-size:12px"><span style="color:var(--dim)">${isE?"Sortie":"Entrée"}: </span><span style="color:${EC[oE]}">${oE}</span>${oO?` — <span style="color:var(--muted)">${h(oO)}</span>`:""}</div>`;
+const ths=ph.map((p,pi)=>`<div class="pw"><img class="pt" data-a="oPh" data-pid="${p}" data-ctx="el" data-ei="${ei}" data-pi="${pi}" id="th_${p}" src=""><div class="pd" data-a="dEP" data-pid="${p}" data-ei="${ei}" data-pi="${pi}">×</div></div>`).join("");
+det=`<div class="el-det"><div class="label">État — ${e.type}</div><div class="ec">${ch}</div><div class="label">Commentaire</div><textarea class="textarea" data-a="sOb" data-ei="${ei}" rows="2" placeholder="Rayures, tache...">${h(ob||"")}</textarea><div style="margin-top:10px"><div class="label">Photos — ${e.type}</div><div class="pb">${ths}<div class="pa" data-a="eCam" data-ei="${ei}">📷</div><div class="pa" data-a="eGal" data-ei="${ei}">🖼</div></div></div>${pv}<button class="btn btn-d" data-a="dEl" data-ei="${ei}" style="margin-top:12px">Supprimer</button></div>`}
+return`<div class="el-card" style="border-left:3px solid ${co}"><div class="el-hdr" data-a="tEl" data-ei="${ei}"><div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0"><div class="el-dot" style="background:${co}"></div><span class="el-name">${h(el.name)}</span>${ph.length?`<span style="font-size:10px;color:var(--dim)">📷${ph.length}</span>`:""}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:${co};font-weight:500">${et!=="—"?et:""}</span><span style="color:var(--dim);font-size:14px;transform:rotate(${ex?90:0}deg);display:inline-block">›</span></div></div>${det}</div>`}).join("");
+
+let aeF="";if(S.showAE)aeF=`<div class="form-card"><input class="input" id="neN" placeholder="Nom élément..." autofocus><div class="btn-row"><button class="btn btn-s" data-a="cAE" style="flex:1">Annuler</button><button class="btn btn-p" data-a="svE" style="flex:1">Ajouter</button></div></div>`;
+rc=`${rps}${els}${aeF}<div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-s" data-a="shAE" style="flex:1">+ Élément</button><button class="btn btn-d btn-sm" data-a="askDR" style="width:auto;padding:8px 14px">🗑</button></div>`}
+else if(!e.rooms.length)rc=`<div style="text-align:center;padding:40px 0;color:var(--muted)">Aucune pièce</div>`;
+
+let arF="";if(S.showAR){const tp=Object.keys(T).map(t=>`<button class="room-tab ${selTp===t?"active":""}" data-a="sTp" data-t="${h(t)}">${h(t)}</button>`).join("");let td="";if(selTp)td=`<div style="margin-top:10px"><input class="input" id="rN" placeholder="Nom" value="${h(selTp==="Pièce personnalisée"?"":selTp)}"><div style="font-size:11px;color:var(--dim);margin-bottom:10px">${T[selTp].join(", ")}</div><div class="btn-row"><button class="btn btn-s" data-a="cAR" style="flex:1">Annuler</button><button class="btn btn-p" data-a="svR" style="flex:1">Ajouter</button></div></div>`;arF=`<div class="form-card" style="margin-top:10px"><div style="font-weight:700;font-size:14px;margin-bottom:10px">Ajouter une pièce</div><div style="display:flex;flex-wrap:wrap;gap:6px">${tp}</div>${td}<button class="btn btn-s" data-a="cAR" style="margin-top:8px">Annuler</button></div>`}
+
+const stb=e.rooms.length?`<button class="btn btn-s btn-sm" data-a="shST" style="margin-top:8px">💾 Sauver template</button>`:"";
+let stf="";if(S.showSTpl)stf=`<div class="form-card" style="margin-top:8px"><input class="input" id="tN" placeholder="Nom du template"><div class="btn-row"><button class="btn btn-s" data-a="cST" style="flex:1">Annuler</button><button class="btn btn-p" data-a="svT" style="flex:1">Sauver</button></div></div>`;
+
+let mo="";if(S.cdel){const msg=S.cdel.t==="room"?`Supprimer "${h(e.rooms[S.cdel.ri]?.name)}" ?`:"";mo=`<div class="ov" data-a="cDel"><div class="mo" onclick="event.stopPropagation()"><p style="font-size:15px;font-weight:700;margin-bottom:16px">${msg}</p><div class="btn-row"><button class="btn btn-s" data-a="cDel" style="flex:1">Annuler</button><button class="btn btn-d" data-a="xDR" style="flex:1">Supprimer</button></div></div></div>`}
+
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">${h(e.address)}</div></div></div>${tabs("rooms")}<div class="content"><div class="room-tabs">${rtabs}<button class="room-tab room-tab-add" data-a="shAR">+ Ajouter</button></div>${rc}${arF}${stb}${stf}</div>${mo}`}
+
+// ── SUMMARY ──
+function rSum(){const e=cEdl();if(!e)return"";const p=prog(e);
+let diffs=[];e.rooms.forEach(r=>r.elements.forEach(el=>{if(el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS)diffs.push(1)}));
+const ps=`<div class="card card-static" style="display:flex;gap:16px;align-items:center;margin-bottom:14px">${ring(p.pE,"Entrée","var(--green)")}${ring(p.pS,"Sortie","var(--amber)")}<div style="flex:1;font-size:12px;color:var(--muted)">${e.rooms.reduce((s,r)=>s+r.elements.length,0)} éléments · ${e.rooms.length} pièces</div></div>`;
+const fb=`<div class="fb"><button class="fb-b ${!S.fDiff?"active":""}" data-a="fAll" style="${!S.fDiff?"border-color:var(--blue);color:var(--blue);background:var(--blue)11":""}">Voir tout</button><button class="fb-b ${S.fDiff?"active":""}" data-a="fDif">⚠ Différences (${diffs.length})</button></div>`;
+let rh="";e.rooms.forEach(r=>{let eh="";r.elements.forEach(el=>{const hd=el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS;if(S.fDiff&&!hd)return;eh+=`<div class="se ${hd?"diff-r":""}"><div class="se-n">${h(el.name)}${hd?'<span class="diff-b">DIFF</span>':""}</div><div class="se-c" style="color:${EC[el.eE]||"#475569"}">${el.eE!=="—"?el.eE:"—"}</div><div class="se-c" style="color:${EC[el.eS]||"#475569"}">${el.eS!=="—"?el.eS:"—"}</div></div>`});if(eh)rh+=`<div class="sr"><div class="sr-t">${h(r.name)}</div><div class="se" style="font-weight:700;font-size:11px;color:var(--dim)"><div class="se-n">Élément</div><div class="se-c">Entrée</div><div class="se-c">Sortie</div></div>${eh}</div>`});
+if(!rh&&S.fDiff)rh=`<div style="text-align:center;padding:30px 0;color:var(--muted)">Aucune différence 👍</div>`;
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">Résumé</div></div></div>${tabs("sum")}<div class="content">${ps}${fb}${rh}</div>`}
+
+// ── EXPORT ──
+function rExp(){const e=cEdl();if(!e)return"";
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">Export</div></div></div>${tabs("exp")}<div class="content"><div class="ex-c"><h3>📄 PDF</h3><p>Impression navigateur.</p><button class="btn btn-p" data-a="xPdf">Imprimer / PDF</button></div><div class="ex-c"><h3>🌐 HTML autonome</h3><p>Fichier avec photos embarquées.</p><button class="btn btn-p" data-a="xHtml">Télécharger HTML</button></div><div class="ex-c"><h3>💾 JSON</h3><p>Backup complet avec photos.</p><button class="btn btn-p" data-a="xJson">Télécharger JSON</button></div></div>`}
+
+// ── THUMBS ──
+function lTh(){document.querySelectorAll(".pt").forEach(i=>{const p=i.dataset.pid;if(p)gP(p).then(d=>{if(d)i.src=d})})}
+
+// ── SIGNATURE PAD ──
+const sigs={};
+function initSig(id,who){const c=document.getElementById(id);if(!c)return;const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#000";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";let d=false;
+const gp=e=>{const r=c.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*(c.width/r.width),y:(t.clientY-r.top)*(c.height/r.height)}};
+const s=e=>{e.preventDefault();d=true;const p=gp(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
+const m=e=>{e.preventDefault();if(!d)return;const p=gp(e);ctx.lineTo(p.x,p.y);ctx.stroke()};
+const u=()=>{d=false};
+c.addEventListener("mousedown",s);c.addEventListener("mousemove",m);c.addEventListener("mouseup",u);
+c.addEventListener("touchstart",s,{passive:false});c.addEventListener("touchmove",m,{passive:false});c.addEventListener("touchend",u);
+sigs[who]={canvas:c,ctx,clear:()=>{ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#000";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round"}}}
+
+// ── ANNOTATOR ──
+function openAnn(phId,cb){gP(phId).then(imgD=>{if(!imgD)return;
+const ov=document.createElement("div");ov.className="ann-ov";
+ov.innerHTML=`<div class="ann-cw"><canvas id="ac"></canvas></div><div class="ann-tb"><button class="ann-t active" data-tl="freehand">✏️</button><button class="ann-t" data-tl="circle">⭕</button><button class="ann-t" data-tl="arrow">➡️</button><button class="ann-t" data-tl="text">Aa</button><button class="ann-t" id="au">↩️</button><button class="ann-t" id="ax" style="color:var(--red)">✕</button><button class="ann-t" id="as" style="color:var(--green)">✓</button></div>`;
+document.body.appendChild(ov);const c=document.getElementById("ac"),ctx=c.getContext("2d");const img=new Image();let tool="freehand",hist=[],dr=false,sp=null;
+img.onload=()=>{c.width=img.width;c.height=img.height;ctx.drawImage(img,0,0)};img.src=imgD;
+const gp=e=>{const r=c.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*(c.width/r.width),y:(t.clientY-r.top)*(c.height/r.height)}};
+ctx.strokeStyle="#FF0000";ctx.lineWidth=3;ctx.lineCap="round";ctx.lineJoin="round";
+const os=e=>{e.preventDefault();dr=true;sp=gp(e);if(tool==="freehand"){ctx.beginPath();ctx.moveTo(sp.x,sp.y)}if(tool==="text"){const txt=prompt("Texte:");if(txt){hist.push(ctx.getImageData(0,0,c.width,c.height));ctx.font="bold 18px sans-serif";ctx.fillStyle="#FF0000";ctx.fillText(txt,sp.x,sp.y)}dr=false}};
+const om=e=>{e.preventDefault();if(!dr)return;const p=gp(e);if(tool==="freehand"){ctx.lineTo(p.x,p.y);ctx.stroke()}};
+const oe=e=>{if(!dr)return;dr=false;if(tool==="freehand")hist.push(ctx.getImageData(0,0,c.width,c.height));
+else if(sp){hist.push(ctx.getImageData(0,0,c.width,c.height));const ep=gp(e.changedTouches?e.changedTouches[0]:e);
+if(tool==="circle"){const r=Math.sqrt((ep.x-sp.x)**2+(ep.y-sp.y)**2);ctx.beginPath();ctx.arc(sp.x,sp.y,r,0,2*Math.PI);ctx.stroke()}
+else if(tool==="arrow"){ctx.beginPath();ctx.moveTo(sp.x,sp.y);ctx.lineTo(ep.x,ep.y);ctx.stroke();const a=Math.atan2(ep.y-sp.y,ep.x-sp.x);ctx.beginPath();ctx.moveTo(ep.x,ep.y);ctx.lineTo(ep.x-15*Math.cos(a-.4),ep.y-15*Math.sin(a-.4));ctx.moveTo(ep.x,ep.y);ctx.lineTo(ep.x-15*Math.cos(a+.4),ep.y-15*Math.sin(a+.4));ctx.stroke()}}};
+c.addEventListener("mousedown",os);c.addEventListener("mousemove",om);c.addEventListener("mouseup",oe);
+c.addEventListener("touchstart",os,{passive:false});c.addEventListener("touchmove",om,{passive:false});c.addEventListener("touchend",oe);
+ov.querySelectorAll("[data-tl]").forEach(b=>b.onclick=()=>{tool=b.dataset.tl;ov.querySelectorAll("[data-tl]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
+document.getElementById("au").onclick=()=>{if(hist.length)ctx.putImageData(hist.pop(),0,0)};
+document.getElementById("ax").onclick=()=>ov.remove();
+document.getElementById("as").onclick=()=>{cb(c.toDataURL("image/jpeg",0.7));ov.remove()}})}
+
+// ── LIGHTBOX ──
+function openLB(phId,onDel){const lb=document.createElement("div");lb.className="lb";
+lb.innerHTML=`<button class="lb-x" id="lx">×</button><img id="li"><div class="lb-bar"><button class="lb-btn" id="la" style="background:var(--blue2)">✏️ Annoter</button><button class="lb-btn" id="ld" style="background:var(--red-d);color:#fca5a5">🗑</button><button class="lb-btn" id="lc">Fermer</button></div>`;
+document.body.appendChild(lb);gP(phId).then(d=>{if(d)document.getElementById("li").src=d});
+document.getElementById("lx").onclick=document.getElementById("lc").onclick=()=>lb.remove();
+document.getElementById("ld").onclick=()=>{onDel();lb.remove()};
+document.getElementById("la").onclick=()=>{lb.remove();openAnn(phId,nd=>{sP(phId,nd).then(()=>{R();ts("Annotée")})})};
+lb.onclick=e=>{if(e.target===lb)lb.remove()}}
+
+// ── BIND ──
+function B(){document.querySelectorAll("[data-a]").forEach(el=>{const a=el.dataset.a;
+if(a==="shNew")el.onclick=()=>{S.showNew=true;R()};
+else if(a==="cNew")el.onclick=()=>{S.showNew=false;S.nType="Entrée";R()};
+else if(a==="sNT")el.onclick=()=>{S.nType=el.dataset.t;R()};
+else if(a==="bk")el.onclick=()=>{S.view="list";S.cur=null;S.exp={};S.showAR=false;S.showAE=false;S.cdel=null;S.fDiff=false;S.showSTpl=false;selTp=null;R()};
+else if(a==="goEdit")el.onclick=()=>{S.view="edit";R()};
+else if(a==="goRooms")el.onclick=()=>{S.view="rooms";S.exp={};S.showAE=false;R()};
+else if(a==="goSum")el.onclick=()=>{S.view="sum";R()};
+else if(a==="goExp")el.onclick=()=>{S.view="exp";R()};
+else if(a==="goCheck")el.onclick=()=>{S.view="check";R()};
+else if(a==="goSigs")el.onclick=()=>{S.view="sigs";R();setTimeout(()=>{initSig("sig_loc","loc");initSig("sig_bail","bail")},50)};
+
+// Create
+else if(a==="svNew")el.onclick=()=>{const n=document.getElementById("nN")?.value?.trim()||"",ad=document.getElementById("nA")?.value?.trim()||"";const lnk=document.getElementById("lnk"),li=lnk?parseInt(lnk.value):NaN;const tS=document.getElementById("fTpl"),tv=tS?.value||"";
+const ne={id:uid2(),name:n||ad||"Sans nom",address:ad,type:S.nType,date:new Date().toISOString().split("T")[0],surface:"",floor:"",tenant:"",phone:"",email:"",owner:"",rooms:[],ck:{},sigs:{},_lm:Date.now(),_le:0};
+if(!isNaN(li)&&S.edls[li]){const sr=S.edls[li];ne.linkedId=sr.id;ne.address=sr.address;ne.surface=sr.surface;ne.floor=sr.floor;ne.rooms=JSON.parse(JSON.stringify(sr.rooms));ne.rooms.forEach(r=>r.elements.forEach(el=>{el.eS="—";el.oS="";el.pS=[]}));ne.ck=JSON.parse(JSON.stringify(sr.ck||{}))}
+else if(tv.startsWith("t")){const ti=parseInt(tv.slice(1));const tpl=ldT()[ti];if(tpl)ne.rooms=tpl.rooms.map(r=>({name:r.name,elements:r.els.map(n2=>mkEl(n2)),photos:[]}))}
+S.edls.push(ne);autoSave();S.showNew=false;S.cur=S.edls.length-1;S.view="edit";S.nType="Entrée";R();ts("EDL créé")};
+
+else if(a==="oEdl")el.onclick=()=>{S.cur=+el.dataset.i;S.view="edit";S.cr=0;R()};
+else if(a==="dup")el.onclick=()=>{const sr=S.edls[+el.dataset.i],dp=JSON.parse(JSON.stringify(sr));dp.id=uid2();dp.name+=" (copie)";dp._le=0;S.edls.push(dp);autoSave();R();ts("Dupliqué")};
+else if(a==="askDel")el.onclick=()=>{S.cdel={t:"edl",i:+el.dataset.i};R()};
+else if(a==="cDel")el.onclick=()=>{S.cdel=null;R()};
+else if(a==="xDel")el.onclick=()=>{S.edls.splice(S.cdel.i,1);autoSave();S.cdel=null;R();ts("Supprimé")};
+
+// Edit fields
+else if(a==="sTyp")el.onclick=()=>{cEdl().type=el.dataset.t;autoSave();R()};
+else if(a==="chF")el.addEventListener(el.type==="date"?"change":"input",()=>{cEdl()[el.dataset.f]=el.value;autoSave()});
+else if(a==="chCk")el.addEventListener(el.type==="date"?"change":"input",()=>{cEdl().ck[el.dataset.c]=el.value;autoSave()});
+else if(a==="tCk")el.onclick=()=>{const e=cEdl();e.ck[el.dataset.c]=e.ck[el.dataset.c]?"":"ok";autoSave();R()};
+
+// Signatures
+else if(a==="rstSig")el.onclick=()=>{if(sigs[el.dataset.w])sigs[el.dataset.w].clear()};
+else if(a==="svSig")el.onclick=()=>{const w=el.dataset.w;if(!sigs[w])return;const e=cEdl();if(!e.sigs)e.sigs={};e.sigs[w]=sigs[w].canvas.toDataURL("image/png");e.sigs[w+"D"]=nw();autoSave();R();ts("Signature OK")};
+else if(a==="clrSig")el.onclick=()=>{const e=cEdl();delete e.sigs[el.dataset.w];delete e.sigs[el.dataset.w+"D"];autoSave();R()};
+
+// Rooms
+else if(a==="sR")el.onclick=()=>{S.cr=+el.dataset.ri;S.exp={};S.showAE=false;R()};
+else if(a==="shAR")el.onclick=()=>{S.showAR=true;selTp=null;R()};
+else if(a==="cAR")el.onclick=()=>{S.showAR=false;selTp=null;R()};
+else if(a==="sTp")el.onclick=()=>{selTp=el.dataset.t;R()};
+else if(a==="svR")el.onclick=()=>{const n=document.getElementById("rN")?.value?.trim();if(!n||!selTp)return;cEdl().rooms.push({name:n,elements:T[selTp].map(n2=>mkEl(n2)),photos:[]});autoSave();S.showAR=false;S.cr=cEdl().rooms.length-1;selTp=null;R();ts("Pièce ajoutée")};
+else if(a==="askDR")el.onclick=()=>{S.cdel={t:"room",ri:S.cr};R()};
+else if(a==="xDR")el.onclick=()=>{cEdl().rooms.splice(S.cdel.ri,1);if(S.cr>=cEdl().rooms.length)S.cr=Math.max(0,cEdl().rooms.length-1);autoSave();S.cdel=null;R();ts("Supprimée")};
+
+// Templates
+else if(a==="shST")el.onclick=()=>{S.showSTpl=true;R()};
+else if(a==="cST")el.onclick=()=>{S.showSTpl=false;R()};
+else if(a==="svT")el.onclick=()=>{const n=document.getElementById("tN")?.value?.trim();if(!n)return;const ts2=ldT();ts2.push({name:n,rooms:cEdl().rooms.map(r=>({name:r.name,els:r.elements.map(el=>el.name)}))});svT(ts2);S.showSTpl=false;R();ts("Template sauvé")};
+
+// Elements
+else if(a==="tEl")el.onclick=()=>{const ei=+el.dataset.ei;S.exp[ei]=!S.exp[ei];R()};
+else if(a==="sEt")el.onclick=()=>{const ei=+el.dataset.ei,v=el.dataset.v,isE=cEdl().type==="Entrée";cRoom().elements[ei][isE?"eE":"eS"]=v;autoSave();R()};
+else if(a==="sOb")el.oninput=()=>{const ei=+el.dataset.ei,isE=cEdl().type==="Entrée";cRoom().elements[ei][isE?"oE":"oS"]=el.value;autoSave()};
+else if(a==="shAE")el.onclick=()=>{S.showAE=true;R();setTimeout(()=>document.getElementById("neN")?.focus(),50)};
+else if(a==="cAE")el.onclick=()=>{S.showAE=false;R()};
+else if(a==="svE")el.onclick=()=>{const n=document.getElementById("neN")?.value?.trim();if(!n)return;cRoom().elements.push(mkEl(n));autoSave();S.showAE=false;R();ts("Ajouté")};
+else if(a==="dEl")el.onclick=()=>{cRoom().elements.splice(+el.dataset.ei,1);autoSave();R();ts("Supprimé")};
+
+// Photos
+else if(a==="eCam")el.onclick=()=>{pTgt={t:"el",ei:+el.dataset.ei};document.getElementById("ci").click()};
+else if(a==="eGal")el.onclick=()=>{pTgt={t:"el",ei:+el.dataset.ei};document.getElementById("gi").click()};
+else if(a==="rCam")el.onclick=()=>{pTgt={t:"room"};document.getElementById("ci").click()};
+else if(a==="rGal")el.onclick=()=>{pTgt={t:"room"};document.getElementById("gi").click()};
+else if(a==="oPh")el.onclick=()=>{const phid=el.dataset.pid,ctx=el.dataset.ctx;openLB(phid,()=>{if(ctx==="el"){const ei=+el.dataset.ei,pi=+el.dataset.pi,isE=cEdl().type==="Entrée",k=isE?"pE":"pS";cRoom().elements[ei][k].splice(pi,1)}else if(ctx==="room")cRoom().photos.splice(+el.dataset.pi,1);autoSave();dP(phid);R();ts("Supprimée")})};
+else if(a==="dEP")el.onclick=ev=>{ev.stopPropagation();const phid=el.dataset.pid,ei=+el.dataset.ei,pi=+el.dataset.pi,isE=cEdl().type==="Entrée",k=isE?"pE":"pS";cRoom().elements[ei][k].splice(pi,1);autoSave();dP(phid);R();ts("Supprimée")};
+else if(a==="dRP")el.onclick=ev=>{ev.stopPropagation();cRoom().photos.splice(+el.dataset.pi,1);autoSave();dP(el.dataset.pid);R();ts("Supprimée")};
+
+// Filter
+else if(a==="fAll")el.onclick=()=>{S.fDiff=false;R()};
+else if(a==="fDif")el.onclick=()=>{S.fDiff=true;R()};
+
+// Export
+else if(a==="xPdf")el.onclick=()=>{window.print();cEdl()._le=Date.now();autoSave()};
+else if(a==="xJson")el.onclick=()=>expJson();
+else if(a==="xHtml")el.onclick=()=>expHtml();
+else if(a==="expQ")el.onclick=()=>{S.cur=+el.dataset.i;expJson()};
+else if(a==="impJ")el.onclick=()=>document.getElementById("ji").click();
+});
+const ne=document.getElementById("neN");if(ne)ne.onkeydown=e=>{if(e.key==="Enter"){const n=ne.value.trim();if(n){cRoom().elements.push(mkEl(n));autoSave();S.showAE=false;R();ts("Ajouté")}}}}
+
+// ── Photos ──
+function hPF(files){if(!pTgt||!files.length)return;const tg=pTgt;let dn=0;const tot=files.length;
+Array.from(files).forEach(f=>{comp(f).then(d=>{const id=pid();sP(id,d).then(()=>{if(tg.t==="el"){const isE=cEdl().type==="Entrée",k=isE?"pE":"pS",el=cRoom().elements[tg.ei];if(!el[k])el[k]=[];el[k].push(id)}else if(tg.t==="room"){if(!cRoom().photos)cRoom().photos=[];cRoom().photos.push(id)}dn++;if(dn===tot){autoSave();R();ts(tot+" photo"+(tot>1?"s":"")+" ajoutée"+(tot>1?"s":""))}})})})}
+document.getElementById("ci").onchange=function(){hPF(this.files);this.value=""};
+document.getElementById("gi").onchange=function(){hPF(this.files);this.value=""};
+
+// ── Import ──
+document.getElementById("ji").onchange=function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.edl){S.edls.push(d.edl);if(d.photos)d.photos.forEach(p=>sP(p.id,p.data||p.d))}autoSave();R();ts("Importé")}catch{ts("Erreur")}};r.readAsText(f);this.value=""};
+
+// ── Export JSON ──
+async function expJson(){const e=cEdl();if(!e)return;const pids=[];e.rooms.forEach(r=>{(r.photos||[]).forEach(p=>pids.push(p));r.elements.forEach(el=>{(el.pE||[]).forEach(p=>pids.push(p));(el.pS||[]).forEach(p=>pids.push(p))})});
+const photos=[];for(const p of pids){const d=await gP(p);if(d)photos.push({id:p,d})}
+const blob=new Blob([JSON.stringify({edl:e,photos},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`EDL_${e.name.replace(/[^a-zA-Z0-9]/g,"_")}_${e.date||"bak"}.json`;a.click();URL.revokeObjectURL(url);e._le=Date.now();autoSave();ts("JSON exporté")}
+
+// ── Export HTML ──
+async function expHtml(){const e=cEdl();if(!e)return;ts("Génération...");const pm={};
+for(const r of e.rooms){for(const p of(r.photos||[])){const d=await gP(p);if(d)pm[p]=d}for(const el of r.elements){for(const p of(el.pE||[])){const d=await gP(p);if(d)pm[p]=d}for(const p of(el.pS||[])){const d=await gP(p);if(d)pm[p]=d}}}
+const H=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+let html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EDL — ${H(e.name)}</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#1a1a1a;font-size:13px}h1{font-size:22px}h2{font-size:16px;margin:20px 0 8px;border-bottom:2px solid #e5e7eb;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6;font-weight:600}.ph{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.ph img{width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd}.diff{background:#fef3c7}.info{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;margin:10px 0;font-size:12px}.info dt{color:#666;font-weight:600}.info dd{margin:0}.sb{display:inline-block;text-align:center;margin:10px 20px 10px 0}.sb img{border:1px solid #ccc;border-radius:4px;max-width:200px}@media print{body{padding:10px}img{max-height:60px}}</style></head><body>`;
+html+=`<h1>État des lieux — ${H(e.name)}</h1><p>${H(e.type)} — ${H(e.date)}</p><dl class="info"><dt>Adresse</dt><dd>${H(e.address)}</dd><dt>Surface</dt><dd>${e.surface?e.surface+" m²":"—"}</dd><dt>Locataire</dt><dd>${H(e.tenant||"—")}</dd><dt>Bailleur</dt><dd>${H(e.owner||"—")}</dd></dl>`;
+if(e.ck&&Object.keys(e.ck).length){html+=`<h2>Checklist</h2><table><tr><th>Élément</th><th>Valeur</th></tr>`;CK.forEach(it=>{const v=e.ck[it.id];if(v)html+=`<tr><td>${H(it.l)}</td><td>${it.t==="check"?"✓ OK":H(v)}</td></tr>`});html+=`</table>`}
+e.rooms.forEach(r=>{html+=`<h2>${H(r.name)}</h2>`;if(r.photos?.length){html+=`<div class="ph">`;r.photos.forEach(p=>{if(pm[p])html+=`<img src="${pm[p]}">`});html+=`</div>`}
+html+=`<table><tr><th>Élément</th><th>Entrée</th><th>Obs.</th><th>Sortie</th><th>Obs.</th><th>Photos</th></tr>`;
+r.elements.forEach(el=>{const d=el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS;html+=`<tr${d?' class="diff"':""}><td><b>${H(el.name)}</b></td><td>${H(el.eE)}</td><td>${H(el.oE)}</td><td>${H(el.eS)}</td><td>${H(el.oS)}</td><td><div class="ph">`;
+(el.pE||[]).forEach(p=>{if(pm[p])html+=`<img src="${pm[p]}">`});(el.pS||[]).forEach(p=>{if(pm[p])html+=`<img src="${pm[p]}">`});html+=`</div></td></tr>`});html+=`</table>`});
+if(e.sigs&&(e.sigs.loc||e.sigs.bail)){html+=`<h2>Signatures</h2><div>`;if(e.sigs.loc)html+=`<div class="sb"><p><b>Locataire</b> — ${H(e.tenant)}</p><img src="${e.sigs.loc}"><p style="font-size:10px;color:#666">${H(e.sigs.locD||"")}</p></div>`;if(e.sigs.bail)html+=`<div class="sb"><p><b>Bailleur</b> — ${H(e.owner)}</p><img src="${e.sigs.bail}"><p style="font-size:10px;color:#666">${H(e.sigs.bailD||"")}</p></div>`;html+=`</div>`}
+html+=`<p style="margin-top:30px;font-size:11px;color:#999">Généré le ${new Date().toLocaleDateString("fr-FR")}</p></body></html>`;
+const blob=new Blob([html],{type:"text/html"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`EDL_${e.name.replace(/[^a-zA-Z0-9]/g,"_")}_${e.date||"exp"}.html`;a.click();URL.revokeObjectURL(url);e._le=Date.now();autoSave();ts("HTML exporté")}
+
+// Beforeunload
+window.addEventListener("beforeunload",e=>{if(S.edls.some(x=>(x._lm||0)>(x._le||0))){e.preventDefault();e.returnValue="Modifications non exportées."}});
+
+// Service Worker
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+
+// Init
+odb().then(()=>{S.edls=ld();S.edls.forEach(e=>{if(!e.id)e.id=uid2();if(!e.ck)e.ck={};if(!e.sigs)e.sigs={}});autoSave();R()});
+</script>
+</body>
+</html>
