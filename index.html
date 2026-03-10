@@ -309,7 +309,7 @@ else if(a==="clrSig")el.onclick=()=>{const e=cEdl();delete e.sigs[el.dataset.w];
 
 // Rooms
 else if(a==="sR")el.onclick=()=>{S.cr=+el.dataset.ri;S.exp={};S.showAE=false;R()};
-else if(a==="shAR")el.onclick=()=>{S.showAR=true;selTp=null;R()};
+else if(a==="shAR")el.onclick=()=>{S.showAR=true;selTp=null;R();setTimeout(()=>{const f=document.querySelector('.form-card');if(f)f.scrollIntoView({behavior:'smooth'})},50)};
 else if(a==="cAR")el.onclick=()=>{S.showAR=false;selTp=null;R()};
 else if(a==="sTp")el.onclick=()=>{selTp=el.dataset.t;R()};
 else if(a==="svR")el.onclick=()=>{const n=document.getElementById("rN")?.value?.trim();if(!n||!selTp)return;cEdl().rooms.push({name:n,elements:T[selTp].map(n2=>mkEl(n2)),photos:[]});autoSave();S.showAR=false;S.cr=cEdl().rooms.length-1;selTp=null;R();ts("Pièce ajoutée")};
@@ -344,7 +344,7 @@ else if(a==="fAll")el.onclick=()=>{S.fDiff=false;R()};
 else if(a==="fDif")el.onclick=()=>{S.fDiff=true;R()};
 
 // Export
-else if(a==="xPdf")el.onclick=()=>{window.print();cEdl()._le=Date.now();autoSave()};
+else if(a==="xPdf")el.onclick=()=>expPdf();
 else if(a==="xJson")el.onclick=()=>expJson();
 else if(a==="xHtml")el.onclick=()=>expHtml();
 else if(a==="expQ")el.onclick=()=>{S.cur=+el.dataset.i;expJson()};
@@ -380,6 +380,116 @@ r.elements.forEach(el=>{const d=el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS;html
 if(e.sigs&&(e.sigs.loc||e.sigs.bail)){html+=`<h2>Signatures</h2><div>`;if(e.sigs.loc)html+=`<div class="sb"><p><b>Locataire</b> — ${H(e.tenant)}</p><img src="${e.sigs.loc}"><p style="font-size:10px;color:#666">${H(e.sigs.locD||"")}</p></div>`;if(e.sigs.bail)html+=`<div class="sb"><p><b>Bailleur</b> — ${H(e.owner)}</p><img src="${e.sigs.bail}"><p style="font-size:10px;color:#666">${H(e.sigs.bailD||"")}</p></div>`;html+=`</div>`}
 html+=`<p style="margin-top:30px;font-size:11px;color:#999">Généré le ${new Date().toLocaleDateString("fr-FR")}</p></body></html>`;
 const blob=new Blob([html],{type:"text/html"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`EDL_${e.name.replace(/[^a-zA-Z0-9]/g,"_")}_${e.date||"exp"}.html`;a.click();URL.revokeObjectURL(url);e._le=Date.now();autoSave();ts("HTML exporté")}
+
+// ── Export PDF (full report) ──
+async function expPdf(){
+const e=cEdl();if(!e)return;ts("Préparation du rapport...");
+const pm={};
+for(const r of e.rooms){for(const p of(r.photos||[])){const d=await gP(p);if(d)pm[p]=d}for(const el of r.elements){for(const p of(el.pE||[])){const d=await gP(p);if(d)pm[p]=d}for(const p of(el.pS||[])){const d=await gP(p);if(d)pm[p]=d}}}
+const H=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const eColor=v=>({"Neuf":"#059669","Bon":"#16a34a","Usure normale":"#d97706","Dégradé":"#dc2626","Mauvais":"#991b1b","N/A":"#6b7280","—":"#9ca3af"})[v]||"#9ca3af";
+const eDot=v=>`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${eColor(v)};margin-right:4px;vertical-align:middle"></span>`;
+
+let rpt=`<style>
+@page{size:A4;margin:18mm 15mm 18mm 15mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#1f2937;line-height:1.4}
+.page-header{border-bottom:3px solid #1e40af;padding-bottom:14px;margin-bottom:18px}
+.page-header h1{font-size:20px;color:#1e3a5f;margin-bottom:2px;letter-spacing:-0.3px}
+.page-header .type-badge{display:inline-block;padding:3px 14px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.type-e{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.type-s{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:18px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden}
+.info-cell{padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:11px}
+.info-cell:nth-child(odd){background:#f9fafb}
+.info-label{color:#6b7280;font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:1px}
+.info-val{color:#111827;font-weight:500}
+.section-title{font-size:14px;font-weight:700;color:#1e3a5f;margin:20px 0 10px;padding:6px 0;border-bottom:2px solid #dbeafe;page-break-after:avoid}
+.section-title span{font-size:10px;color:#6b7280;font-weight:400;margin-left:6px}
+.room-photos{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.room-photos img{width:90px;height:68px;object-fit:cover;border-radius:4px;border:1px solid #d1d5db}
+table.el-table{width:100%;border-collapse:collapse;margin:0 0 8px;font-size:10px}
+table.el-table th{background:#f0f4ff;color:#374151;font-weight:700;padding:7px 8px;text-align:left;border:1px solid #d1d5db;font-size:9px;text-transform:uppercase;letter-spacing:0.3px}
+table.el-table td{padding:6px 8px;border:1px solid #e5e7eb;vertical-align:top}
+table.el-table tr:nth-child(even){background:#fafbfc}
+table.el-table tr.diff{background:#fefce8;border-left:3px solid #f59e0b}
+table.el-table .etat{font-weight:600;text-align:center;white-space:nowrap}
+table.el-table .obs{color:#4b5563;font-size:9.5px;max-width:150px}
+table.el-table .el-photos{display:flex;flex-wrap:wrap;gap:3px}
+table.el-table .el-photos img{width:38px;height:38px;object-fit:cover;border-radius:3px;border:1px solid #d1d5db}
+.ck-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.ck-table td{padding:5px 10px;border:1px solid #e5e7eb;font-size:11px}
+.ck-table td:first-child{font-weight:600;color:#374151;width:50%;background:#f9fafb}
+.ck-table td:last-child{color:#111827}
+.sig-section{display:flex;gap:30px;margin:16px 0;page-break-inside:avoid}
+.sig-block{flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-align:center}
+.sig-block .sig-role{font-weight:700;font-size:12px;color:#1f2937;margin-bottom:2px}
+.sig-block .sig-name{font-size:10px;color:#6b7280;margin-bottom:6px}
+.sig-block .sig-mention{font-size:9px;color:#9ca3af;font-style:italic;margin-bottom:8px}
+.sig-block img{max-width:180px;max-height:70px;border:1px solid #d1d5db;border-radius:4px}
+.sig-block .sig-date{font-size:9px;color:#9ca3af;margin-top:4px}
+.sig-block .sig-empty{height:70px;border:1px dashed #d1d5db;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#d1d5db;font-size:10px}
+.footer{margin-top:24px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;display:flex;justify-content:space-between}
+</style>`;
+
+// Header
+rpt+=`<div class="page-header"><h1>ÉTAT DES LIEUX${e.type==="Sortie"?" DE SORTIE":" D'ENTRÉE"}</h1><div style="margin-top:6px"><span class="type-badge ${e.type==="Entrée"?"type-e":"type-s"}">${H(e.type)}</span><span style="margin-left:10px;font-size:12px;color:#6b7280">${H(e.date)}</span></div></div>`;
+
+// Info grid
+rpt+=`<div class="info-grid">`;
+const fields=[["Adresse du bien",e.address],["Nom / Référence",e.name],["Surface",e.surface?e.surface+" m²":"—"],["Étage",e.floor||"—"],["Nom du locataire",e.tenant||"—"],["Téléphone",e.phone||"—"],["Email",e.email||"—"],["Nom du bailleur",e.owner||"—"]];
+fields.forEach(f=>{rpt+=`<div class="info-cell"><span class="info-label">${f[0]}</span><span class="info-val">${H(f[1])}</span></div>`});
+rpt+=`</div>`;
+
+// Checklist
+if(e.ck&&Object.keys(e.ck).some(k=>e.ck[k])){
+rpt+=`<div class="section-title">Remise des clés, compteurs & équipements</div><table class="ck-table">`;
+CK.forEach(it=>{const v=e.ck[it.id];if(v)rpt+=`<tr><td>${H(it.l)}</td><td>${it.t==="check"?"✓ Conforme":H(v)}</td></tr>`});
+rpt+=`</table>`}
+
+// Rooms
+e.rooms.forEach((r,ri)=>{
+const filled=r.elements.filter(el=>el.eE!=="—"||el.eS!=="—").length;
+rpt+=`<div class="section-title">${H(r.name)}<span>${filled}/${r.elements.length} éléments renseignés</span></div>`;
+if(r.photos?.length){rpt+=`<div class="room-photos">`;r.photos.forEach(p=>{if(pm[p])rpt+=`<img src="${pm[p]}">`});rpt+=`</div>`}
+rpt+=`<table class="el-table"><thead><tr><th style="width:20%">Élément</th><th style="width:12%">État entrée</th><th style="width:18%">Observations</th><th style="width:12%">État sortie</th><th style="width:18%">Observations</th><th style="width:20%">Photos</th></tr></thead><tbody>`;
+r.elements.forEach(el=>{
+const isDiff=el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS;
+rpt+=`<tr${isDiff?' class="diff"':""}>`;
+rpt+=`<td style="font-weight:600">${H(el.name)}</td>`;
+rpt+=`<td class="etat" style="color:${eColor(el.eE)}">${eDot(el.eE)}${el.eE==="—"?"—":H(el.eE)}</td>`;
+rpt+=`<td class="obs">${H(el.oE)||"—"}</td>`;
+rpt+=`<td class="etat" style="color:${eColor(el.eS)}">${eDot(el.eS)}${el.eS==="—"?"—":H(el.eS)}</td>`;
+rpt+=`<td class="obs">${H(el.oS)||"—"}</td>`;
+rpt+=`<td><div class="el-photos">`;
+(el.pE||[]).forEach(p=>{if(pm[p])rpt+=`<img src="${pm[p]}">`});
+(el.pS||[]).forEach(p=>{if(pm[p])rpt+=`<img src="${pm[p]}">`});
+rpt+=`</div></td></tr>`});
+rpt+=`</tbody></table>`});
+
+// Signatures
+rpt+=`<div class="section-title">Signatures</div><div class="sig-section">`;
+// Locataire
+rpt+=`<div class="sig-block"><div class="sig-role">Le locataire</div><div class="sig-name">${H(e.tenant||"")}</div><div class="sig-mention">Lu et approuvé</div>`;
+if(e.sigs?.loc)rpt+=`<img src="${e.sigs.loc}"><div class="sig-date">${H(e.sigs.locD||"")}</div>`;
+else rpt+=`<div class="sig-empty">Signature</div>`;
+rpt+=`</div>`;
+// Bailleur
+rpt+=`<div class="sig-block"><div class="sig-role">Le bailleur</div><div class="sig-name">${H(e.owner||"")}</div><div class="sig-mention">Lu et approuvé</div>`;
+if(e.sigs?.bail)rpt+=`<img src="${e.sigs.bail}"><div class="sig-date">${H(e.sigs.bailD||"")}</div>`;
+else rpt+=`<div class="sig-empty">Signature</div>`;
+rpt+=`</div></div>`;
+
+// Footer
+rpt+=`<div class="footer"><span>État des lieux — ${H(e.name)} — ${H(e.address)}</span><span>Document généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span></div>`;
+
+// Open in new window for clean print
+const w=window.open("","_blank");
+if(!w){ts("Autorise les popups pour imprimer");return}
+w.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>EDL — "+H(e.name)+"</title></head><body>"+rpt+"</body></html>");
+w.document.close();
+w.onload=()=>{setTimeout(()=>{w.print();w.onafterprint=()=>w.close()},400)};
+e._le=Date.now();autoSave()}
 
 // Beforeunload
 window.addEventListener("beforeunload",e=>{if(S.edls.some(x=>(x._lm||0)>(x._le||0))){e.preventDefault();e.returnValue="Modifications non exportées."}});
