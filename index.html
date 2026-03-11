@@ -170,7 +170,7 @@ return`<div class="hdr"><div style="flex:1"><h1>📋 États des lieux</h1><div c
 
 // ── EDIT ──
 function rEdit(){const e=cEdl();if(!e)return"";
-const flds=[["Type","toggle"],["Date","date","date"],["Adresse","address","text"],["Surface (m²)","surface","number"],["Étage","floor","text"],["Locataire","tenant","text"],["Tél. locataire","phone","tel"],["Email locataire","email","email"],["Bailleur","owner","text"]];
+const flds=[["Type","toggle"],["Date","date","date"],["Adresse","address","text"],["Surface (m²)","surface","number"],["Étage","floor","text"],["Locataire","tenant","text"],["Tél. locataire","phone","tel"],["Email locataire","email","email"],["Bailleur","owner","text"],["Mandataire (nom / adresse)","mandataire","text"]];
 let html=flds.map(f=>{if(f[0]==="Type")return`<div class="field"><label class="label">Type</label><div class="toggle-row" style="margin-bottom:0"><button class="toggle-btn ${e.type==="Entrée"?"t-e":""}" data-a="sTyp" data-t="Entrée">Entrée</button><button class="toggle-btn ${e.type==="Sortie"?"t-s":""}" data-a="sTyp" data-t="Sortie">Sortie</button></div></div>`;return`<div class="field"><label class="label">${f[0]}</label><input class="input" type="${f[2]}" value="${h(e[f[1]]||"")}" data-a="chF" data-f="${f[1]}"></div>`}).join("");
 return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">${h(e.address)}</div></div></div>${tabs("edit")}<div class="content"><div class="form-card">${html}</div></div>`}
 
@@ -182,7 +182,7 @@ return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div st
 // ── SIGNATURES ──
 function rSigs(){const e=cEdl();if(!e)return"";if(!e.sigs)e.sigs={};
 const mkSig=(who,label,name)=>{if(e.sigs[who])return`<img class="sig-prev" src="${e.sigs[who]}"><div style="font-size:11px;color:var(--dim);margin-bottom:6px">Signé le ${e.sigs[who+"D"]||"—"}</div><button class="btn btn-d btn-sm" data-a="clrSig" data-w="${who}">Effacer</button>`;return`<canvas class="sig-pad" id="sig_${who}" width="360" height="160"></canvas><div class="btn-row"><button class="btn btn-s btn-sm" data-a="rstSig" data-w="${who}" style="flex:1">Effacer</button><button class="btn btn-p btn-sm" data-a="svSig" data-w="${who}" style="flex:1">Valider</button></div>`};
-return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">Signatures</div></div></div>${tabs("sigs")}<div class="content"><div class="form-card"><div class="label">Locataire — ${h(e.tenant||"")}</div><p style="font-size:11px;color:var(--dim);margin-bottom:8px">Lu et approuvé</p>${mkSig("loc","Locataire",e.tenant)}</div><div class="form-card"><div class="label">Bailleur — ${h(e.owner||"")}</div><p style="font-size:11px;color:var(--dim);margin-bottom:8px">Lu et approuvé</p>${mkSig("bail","Bailleur",e.owner)}</div></div>`}
+return`<div class="hdr"><button class="hdr-back" data-a="bk">‹</button><div style="flex:1;min-width:0"><h1>${h(e.name)}</h1><div class="hdr-sub">Signatures</div></div></div>${tabs("sigs")}<div class="content"><div class="form-card"><div class="label">Locataire — ${h(e.tenant||"")}</div><p style="font-size:11px;color:var(--dim);margin-bottom:8px">Avant de signer, recopier à la main&nbsp;: "Je reconnais exactes les constatations ci-dessus sur l'état du logement"</p>${mkSig("loc","Locataire",e.tenant)}</div><div class="form-card"><div class="label">Bailleur — ${h(e.owner||"")}</div><p style="font-size:11px;color:var(--dim);margin-bottom:8px">Avant de signer, recopier à la main&nbsp;: "Je reconnais exactes les constatations ci-dessus sur l'état du logement"</p>${mkSig("bail","Bailleur",e.owner)}</div></div>`}
 
 // ── ROOMS ──
 function rRooms(){const e=cEdl();if(!e)return"";const isE=e.type==="Entrée";
@@ -285,8 +285,8 @@ else if(a==="goSigs")el.onclick=()=>{S.view="sigs";R();setTimeout(()=>{initSig("
 
 // Create
 else if(a==="svNew")el.onclick=()=>{const n=document.getElementById("nN")?.value?.trim()||"",ad=document.getElementById("nA")?.value?.trim()||"";const lnk=document.getElementById("lnk"),li=lnk?parseInt(lnk.value):NaN;const tS=document.getElementById("fTpl"),tv=tS?.value||"";
-const ne={id:uid2(),name:n||ad||"Sans nom",address:ad,type:S.nType,date:new Date().toISOString().split("T")[0],surface:"",floor:"",tenant:"",phone:"",email:"",owner:"",rooms:[],ck:{},sigs:{},_lm:Date.now(),_le:0};
-if(!isNaN(li)&&S.edls[li]){const sr=S.edls[li];ne.linkedId=sr.id;ne.address=sr.address;ne.surface=sr.surface;ne.floor=sr.floor;ne.rooms=JSON.parse(JSON.stringify(sr.rooms));ne.rooms.forEach(r=>r.elements.forEach(el=>{el.eS="—";el.oS="";el.pS=[]}));ne.ck=JSON.parse(JSON.stringify(sr.ck||{}))}
+const ne={id:uid2(),name:n||ad||"Sans nom",address:ad,type:S.nType,date:new Date().toISOString().split("T")[0],surface:"",floor:"",tenant:"",phone:"",email:"",owner:"",mandataire:"",entryRefDate:"",rooms:[],ck:{},sigs:{},_lm:Date.now(),_le:0};
+if(!isNaN(li)&&S.edls[li]){const sr=S.edls[li];ne.linkedId=sr.id;ne.address=sr.address;ne.surface=sr.surface;ne.floor=sr.floor;ne.mandataire=sr.mandataire||"";ne.entryRefDate=sr.date;ne.rooms=JSON.parse(JSON.stringify(sr.rooms));ne.rooms.forEach(r=>r.elements.forEach(el=>{el.eS="—";el.oS="";el.pS=[]}));ne.ck=JSON.parse(JSON.stringify(sr.ck||{}))}
 else if(tv.startsWith("t")){const ti=parseInt(tv.slice(1));const tpl=ldT()[ti];if(tpl)ne.rooms=tpl.rooms.map(r=>({name:r.name,elements:r.els.map(n2=>mkEl(n2)),photos:[]}))}
 S.edls.push(ne);autoSave();S.showNew=false;S.cur=S.edls.length-1;S.view="edit";S.nType="Entrée";R();ts("EDL créé")};
 
@@ -370,14 +370,16 @@ const blob=new Blob([JSON.stringify({edl:e,photos},null,2)],{type:"application/j
 async function expHtml(){const e=cEdl();if(!e)return;ts("Génération...");const pm={};
 for(const r of e.rooms){for(const p of(r.photos||[])){const d=await gP(p);if(d)pm[p]=d}for(const el of r.elements){for(const p of(el.pE||[])){const d=await gP(p);if(d)pm[p]=d}for(const p of(el.pS||[])){const d=await gP(p);if(d)pm[p]=d}}}
 const H=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const mand=e.mandataire?`<dt>Mandataire</dt><dd>${H(e.mandataire)}</dd>`:"";
+const entryRef=e.type==="Sortie"&&e.entryRefDate?`<dt>Date EDL d'entrée</dt><dd>${H(e.entryRefDate)}</dd>`:"";
 let html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EDL — ${H(e.name)}</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#1a1a1a;font-size:13px}h1{font-size:22px}h2{font-size:16px;margin:20px 0 8px;border-bottom:2px solid #e5e7eb;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6;font-weight:600}.ph{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.ph img{width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd}.diff{background:#fef3c7}.info{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;margin:10px 0;font-size:12px}.info dt{color:#666;font-weight:600}.info dd{margin:0}.sb{display:inline-block;text-align:center;margin:10px 20px 10px 0}.sb img{border:1px solid #ccc;border-radius:4px;max-width:200px}@media print{body{padding:10px}img{max-height:60px}}</style></head><body>`;
-html+=`<h1>État des lieux — ${H(e.name)}</h1><p>${H(e.type)} — ${H(e.date)}</p><dl class="info"><dt>Adresse</dt><dd>${H(e.address)}</dd><dt>Surface</dt><dd>${e.surface?e.surface+" m²":"—"}</dd><dt>Locataire</dt><dd>${H(e.tenant||"—")}</dd><dt>Bailleur</dt><dd>${H(e.owner||"—")}</dd></dl>`;
+html+=`<h1>État des lieux — ${H(e.name)}</h1><p>${H(e.type)} — ${H(e.date)}</p><dl class="info"><dt>Adresse</dt><dd>${H(e.address)}</dd><dt>Surface</dt><dd>${e.surface?e.surface+" m²":"—"}</dd><dt>Locataire</dt><dd>${H(e.tenant||"—")}</dd><dt>Bailleur</dt><dd>${H(e.owner||"—")}</dd>${mand}${entryRef}</dl>`;
 if(e.ck&&Object.keys(e.ck).length){html+=`<h2>Checklist</h2><table><tr><th>Élément</th><th>Valeur</th></tr>`;CK.forEach(it=>{const v=e.ck[it.id];if(v)html+=`<tr><td>${H(it.l)}</td><td>${it.t==="check"?"✓ OK":H(v)}</td></tr>`});html+=`</table>`}
 e.rooms.forEach(r=>{html+=`<h2>${H(r.name)}</h2>`;if(r.photos?.length){html+=`<div class="ph">`;r.photos.forEach(p=>{if(pm[p])html+=`<img src="${pm[p]}">`});html+=`</div>`}
 html+=`<table><tr><th>Élément</th><th>Entrée</th><th>Obs.</th><th>Sortie</th><th>Obs.</th><th>Photos</th></tr>`;
 r.elements.forEach(el=>{const d=el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS;html+=`<tr${d?' class="diff"':""}><td><b>${H(el.name)}</b></td><td>${H(el.eE)}</td><td>${H(el.oE)}</td><td>${H(el.eS)}</td><td>${H(el.oS)}</td><td><div class="ph">`;
 (el.pE||[]).forEach(p=>{if(pm[p])html+=`<img src="${pm[p]}">`});(el.pS||[]).forEach(p=>{if(pm[p])html+=`<img src="${pm[p]}">`});html+=`</div></td></tr>`});html+=`</table>`});
-if(e.sigs&&(e.sigs.loc||e.sigs.bail)){html+=`<h2>Signatures</h2><div>`;if(e.sigs.loc)html+=`<div class="sb"><p><b>Locataire</b> — ${H(e.tenant)}</p><img src="${e.sigs.loc}"><p style="font-size:10px;color:#666">${H(e.sigs.locD||"")}</p></div>`;if(e.sigs.bail)html+=`<div class="sb"><p><b>Bailleur</b> — ${H(e.owner)}</p><img src="${e.sigs.bail}"><p style="font-size:10px;color:#666">${H(e.sigs.bailD||"")}</p></div>`;html+=`</div>`}
+if(e.sigs&&(e.sigs.loc||e.sigs.bail)){html+=`<h2>Signatures</h2><div>`;if(e.sigs.loc)html+=`<div class="sb"><p><b>Locataire</b> — ${H(e.tenant)}</p><p style="font-size:10px;color:#666;font-style:italic">Je reconnais exactes les constatations ci-dessus sur l'état du logement</p><img src="${e.sigs.loc}"><p style="font-size:10px;color:#666">${H(e.sigs.locD||"")}</p></div>`;if(e.sigs.bail)html+=`<div class="sb"><p><b>Bailleur</b> — ${H(e.owner)}</p><p style="font-size:10px;color:#666;font-style:italic">Je reconnais exactes les constatations ci-dessus sur l'état du logement</p><img src="${e.sigs.bail}"><p style="font-size:10px;color:#666">${H(e.sigs.bailD||"")}</p></div>`;html+=`</div>`}
 html+=`<p style="margin-top:30px;font-size:11px;color:#999">Généré le ${new Date().toLocaleDateString("fr-FR")}</p></body></html>`;
 const blob=new Blob([html],{type:"text/html"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`EDL_${e.name.replace(/[^a-zA-Z0-9]/g,"_")}_${e.date||"exp"}.html`;a.click();URL.revokeObjectURL(url);e._le=Date.now();autoSave();ts("HTML exporté")}
 
@@ -438,6 +440,8 @@ rpt+=`<div class="page-header"><h1>ÉTAT DES LIEUX${e.type==="Sortie"?" DE SORTI
 // Info grid
 rpt+=`<div class="info-grid">`;
 const fields=[["Adresse du bien",e.address],["Nom / Référence",e.name],["Surface",e.surface?e.surface+" m²":"—"],["Étage",e.floor||"—"],["Nom du locataire",e.tenant||"—"],["Téléphone",e.phone||"—"],["Email",e.email||"—"],["Nom du bailleur",e.owner||"—"]];
+if(e.mandataire)fields.push(["Mandataire (si applicable)",e.mandataire]);
+if(e.type==="Sortie"&&e.entryRefDate)fields.push(["Date EDL d'entrée de référence",e.entryRefDate]);
 fields.forEach(f=>{rpt+=`<div class="info-cell"><span class="info-label">${f[0]}</span><span class="info-val">${H(f[1])}</span></div>`});
 rpt+=`</div>`;
 
@@ -470,12 +474,12 @@ rpt+=`</tbody></table>`});
 // Signatures
 rpt+=`<div class="section-title">Signatures</div><div class="sig-section">`;
 // Locataire
-rpt+=`<div class="sig-block"><div class="sig-role">Le locataire</div><div class="sig-name">${H(e.tenant||"")}</div><div class="sig-mention">Lu et approuvé</div>`;
+rpt+=`<div class="sig-block"><div class="sig-role">Le locataire</div><div class="sig-name">${H(e.tenant||"")}</div><div class="sig-mention">Je reconnais exactes les constatations ci-dessus sur l'état du logement</div>`;
 if(e.sigs?.loc)rpt+=`<img src="${e.sigs.loc}"><div class="sig-date">${H(e.sigs.locD||"")}</div>`;
 else rpt+=`<div class="sig-empty">Signature</div>`;
 rpt+=`</div>`;
 // Bailleur
-rpt+=`<div class="sig-block"><div class="sig-role">Le bailleur</div><div class="sig-name">${H(e.owner||"")}</div><div class="sig-mention">Lu et approuvé</div>`;
+rpt+=`<div class="sig-block"><div class="sig-role">Le bailleur</div><div class="sig-name">${H(e.owner||"")}</div><div class="sig-mention">Je reconnais exactes les constatations ci-dessus sur l'état du logement</div>`;
 if(e.sigs?.bail)rpt+=`<img src="${e.sigs.bail}"><div class="sig-date">${H(e.sigs.bailD||"")}</div>`;
 else rpt+=`<div class="sig-empty">Signature</div>`;
 rpt+=`</div></div>`;
