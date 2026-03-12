@@ -294,7 +294,7 @@ else if(a==="oEdl")el.onclick=()=>{S.cur=+el.dataset.i;S.view="edit";S.cr=0;R()}
 else if(a==="dup")el.onclick=()=>{const sr=S.edls[+el.dataset.i],dp=JSON.parse(JSON.stringify(sr));dp.id=uid2();dp.name+=" (copie)";dp._le=0;S.edls.push(dp);autoSave();R();ts("Dupliqué")};
 else if(a==="askDel")el.onclick=()=>{S.cdel={t:"edl",i:+el.dataset.i};R()};
 else if(a==="cDel")el.onclick=()=>{S.cdel=null;R()};
-else if(a==="xDel")el.onclick=()=>{S.edls.splice(S.cdel.i,1);autoSave();S.cdel=null;R();ts("Supprimé")};
+else if(a==="xDel")el.onclick=()=>{const de=S.edls[S.cdel.i];if(de){de.rooms.forEach(r=>{(r.photos||[]).forEach(p=>dP(p));r.elements.forEach(el=>{(el.pE||[]).forEach(p=>dP(p));(el.pS||[]).forEach(p=>dP(p))})})};S.edls.splice(S.cdel.i,1);autoSave();S.cdel=null;R();ts("Supprimé")};
 
 // Edit fields
 else if(a==="sTyp")el.onclick=()=>{cEdl().type=el.dataset.t;autoSave();R()};
@@ -392,100 +392,194 @@ const H=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g
 const eColor=v=>({"Neuf":"#059669","Bon":"#16a34a","Usure normale":"#d97706","Dégradé":"#dc2626","Mauvais":"#991b1b","N/A":"#6b7280","—":"#9ca3af"})[v]||"#9ca3af";
 const eDot=v=>`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${eColor(v)};margin-right:4px;vertical-align:middle"></span>`;
 
+// Collect all photos with references for annexe
+let photoIdx=0;const photoReg=[];
+e.rooms.forEach((r,ri)=>{
+(r.photos||[]).forEach(p=>{if(pm[p]){photoIdx++;photoReg.push({idx:photoIdx,pid:p,room:r.name,element:null,type:"Vue générale",src:pm[p]})}});
+r.elements.forEach(el=>{
+(el.pE||[]).forEach(p=>{if(pm[p]){photoIdx++;photoReg.push({idx:photoIdx,pid:p,room:r.name,element:el.name,type:"Entrée",src:pm[p]})}});
+(el.pS||[]).forEach(p=>{if(pm[p]){photoIdx++;photoReg.push({idx:photoIdx,pid:p,room:r.name,element:el.name,type:"Sortie",src:pm[p]})}});
+})});
+
+// Helper: get photo ref labels for a given list of pids
+const pRefs=(pids)=>{const refs=[];(pids||[]).forEach(p=>{const f=photoReg.find(x=>x.pid===p);if(f)refs.push(f.idx)});return refs.length?`<span class="ph-ref">Annexe : photo${refs.length>1?"s":""} ${refs.join(", ")}</span>`:""};
+
 let rpt=`<style>
 @page{size:A4;margin:18mm 15mm 18mm 15mm}
+@page:first{margin-top:14mm}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#1f2937;line-height:1.4}
-.page-header{border-bottom:3px solid #1e40af;padding-bottom:14px;margin-bottom:18px}
-.page-header h1{font-size:20px;color:#1e3a5f;margin-bottom:2px;letter-spacing:-0.3px}
-.page-header .type-badge{display:inline-block;padding:3px 14px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+body{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#1f2937;line-height:1.5}
+.cover{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:85vh;text-align:center;page-break-after:always}
+.cover-title{font-size:28px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px;margin-bottom:8px}
+.cover-sub{font-size:14px;color:#6b7280;margin-bottom:30px}
+.cover-badge{display:inline-block;padding:6px 24px;border-radius:6px;font-size:13px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:40px}
+.cover-info{text-align:left;border:1px solid #e5e7eb;border-radius:8px;padding:20px 28px;max-width:400px;width:100%}
+.cover-info .ci-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.cover-info .ci-row:last-child{border-bottom:none}
+.cover-info .ci-l{color:#6b7280;font-weight:600}
+.cover-info .ci-v{color:#111827;font-weight:500;text-align:right}
+.cover-gen{margin-top:40px;font-size:10px;color:#9ca3af}
 .type-e{background:#dcfce7;color:#166534;border:1px solid #86efac}
 .type-s{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:18px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden}
-.info-cell{padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:11px}
+.page-header{border-bottom:3px solid #1e40af;padding-bottom:10px;margin-bottom:16px}
+.page-header h1{font-size:18px;color:#1e3a5f;letter-spacing:-0.3px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:16px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden}
+.info-cell{padding:6px 12px;border-bottom:1px solid #f3f4f6;font-size:11px}
 .info-cell:nth-child(odd){background:#f9fafb}
 .info-label{color:#6b7280;font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:1px}
 .info-val{color:#111827;font-weight:500}
-.section-title{font-size:14px;font-weight:700;color:#1e3a5f;margin:20px 0 10px;padding:6px 0;border-bottom:2px solid #dbeafe;page-break-after:avoid}
+.section-title{font-size:14px;font-weight:700;color:#1e3a5f;margin:18px 0 8px;padding:6px 0;border-bottom:2px solid #dbeafe;page-break-after:avoid}
 .section-title span{font-size:10px;color:#6b7280;font-weight:400;margin-left:6px}
-.room-photos{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
-.room-photos img{width:90px;height:68px;object-fit:cover;border-radius:4px;border:1px solid #d1d5db}
 table.el-table{width:100%;border-collapse:collapse;margin:0 0 8px;font-size:10px}
-table.el-table th{background:#f0f4ff;color:#374151;font-weight:700;padding:7px 8px;text-align:left;border:1px solid #d1d5db;font-size:9px;text-transform:uppercase;letter-spacing:0.3px}
-table.el-table td{padding:6px 8px;border:1px solid #e5e7eb;vertical-align:top}
+table.el-table th{background:#f0f4ff;color:#374151;font-weight:700;padding:6px 7px;text-align:left;border:1px solid #d1d5db;font-size:9px;text-transform:uppercase;letter-spacing:0.3px}
+table.el-table td{padding:5px 7px;border:1px solid #e5e7eb;vertical-align:top}
 table.el-table tr:nth-child(even){background:#fafbfc}
 table.el-table tr.diff{background:#fefce8;border-left:3px solid #f59e0b}
 table.el-table .etat{font-weight:600;text-align:center;white-space:nowrap}
-table.el-table .obs{color:#4b5563;font-size:9.5px;max-width:150px}
-table.el-table .el-photos{display:flex;flex-wrap:wrap;gap:3px}
-table.el-table .el-photos img{width:38px;height:38px;object-fit:cover;border-radius:3px;border:1px solid #d1d5db}
-.ck-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+table.el-table .obs{color:#4b5563;font-size:9.5px;max-width:160px}
+.ph-ref{display:inline-block;font-size:8.5px;color:#3b82f6;font-weight:600;margin-top:2px}
+.ck-table{width:100%;border-collapse:collapse;margin-bottom:14px}
 .ck-table td{padding:5px 10px;border:1px solid #e5e7eb;font-size:11px}
 .ck-table td:first-child{font-weight:600;color:#374151;width:50%;background:#f9fafb}
 .ck-table td:last-child{color:#111827}
-.sig-section{display:flex;gap:30px;margin:16px 0;page-break-inside:avoid}
+.sig-section{display:flex;gap:24px;margin:14px 0;page-break-inside:avoid}
 .sig-block{flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-align:center}
 .sig-block .sig-role{font-weight:700;font-size:12px;color:#1f2937;margin-bottom:2px}
-.sig-block .sig-name{font-size:10px;color:#6b7280;margin-bottom:6px}
-.sig-block .sig-mention{font-size:9px;color:#9ca3af;font-style:italic;margin-bottom:8px}
+.sig-block .sig-name{font-size:10px;color:#6b7280;margin-bottom:4px}
+.sig-block .sig-mention{font-size:8.5px;color:#9ca3af;font-style:italic;margin-bottom:6px}
 .sig-block img{max-width:180px;max-height:70px;border:1px solid #d1d5db;border-radius:4px}
-.sig-block .sig-date{font-size:9px;color:#9ca3af;margin-top:4px}
+.sig-block .sig-date{font-size:9px;color:#9ca3af;margin-top:3px}
 .sig-block .sig-empty{height:70px;border:1px dashed #d1d5db;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#d1d5db;font-size:10px}
-.footer{margin-top:24px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;display:flex;justify-content:space-between}
+.footer{margin-top:20px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:8.5px;color:#9ca3af;display:flex;justify-content:space-between}
+.annexe-break{page-break-before:always}
+.annexe-header{font-size:20px;font-weight:800;color:#1e3a5f;margin-bottom:6px;padding-bottom:10px;border-bottom:3px solid #1e40af}
+.annexe-sub{font-size:11px;color:#6b7280;margin-bottom:20px}
+.photo-grid{display:flex;flex-wrap:wrap;gap:12px}
+.photo-card{width:calc(50% - 6px);border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;page-break-inside:avoid;margin-bottom:4px}
+.photo-card img{width:100%;height:180px;object-fit:cover;display:block}
+.photo-card .pc-info{padding:6px 10px;background:#f9fafb;border-top:1px solid #e5e7eb}
+.photo-card .pc-num{font-size:10px;font-weight:800;color:#1e40af;display:inline-block;background:#dbeafe;padding:1px 8px;border-radius:10px;margin-bottom:2px}
+.photo-card .pc-room{font-size:10px;font-weight:700;color:#1f2937}
+.photo-card .pc-el{font-size:9px;color:#6b7280}
+.photo-card .pc-type{font-size:8px;font-weight:600;color:#fff;display:inline-block;padding:1px 6px;border-radius:8px;margin-top:2px}
+.pc-type-e{background:#059669}
+.pc-type-s{background:#d97706}
+.pc-type-g{background:#6b7280}
+.toc{margin:16px 0 20px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden}
+.toc-title{background:#f0f4ff;padding:8px 14px;font-weight:700;font-size:12px;color:#1e3a5f;border-bottom:1px solid #e5e7eb}
+.toc-row{display:flex;justify-content:space-between;padding:5px 14px;font-size:11px;border-bottom:1px solid #f3f4f6}
+.toc-row:last-child{border-bottom:none}
+.toc-row .toc-l{color:#374151;font-weight:500}
+.toc-row .toc-r{color:#6b7280;font-size:10px}
 </style>`;
 
-// Header
-rpt+=`<div class="page-header"><h1>ÉTAT DES LIEUX${e.type==="Sortie"?" DE SORTIE":" D'ENTRÉE"}</h1><div style="margin-top:6px"><span class="type-badge ${e.type==="Entrée"?"type-e":"type-s"}">${H(e.type)}</span><span style="margin-left:10px;font-size:12px;color:#6b7280">${H(e.date)}</span></div></div>`;
+// ═══ PAGE DE GARDE ═══
+const genDate=new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
+const genTime=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+rpt+=`<div class="cover">`;
+rpt+=`<div class="cover-title">ÉTAT DES LIEUX${e.type==="Sortie"?" DE SORTIE":" D'ENTRÉE"}</div>`;
+rpt+=`<div class="cover-sub">${H(e.address||"")}</div>`;
+rpt+=`<div class="cover-badge ${e.type==="Entrée"?"type-e":"type-s"}">${H(e.type)}</div>`;
+rpt+=`<div class="cover-info">`;
+rpt+=`<div class="ci-row"><span class="ci-l">Bien</span><span class="ci-v">${H(e.name)}</span></div>`;
+rpt+=`<div class="ci-row"><span class="ci-l">Date</span><span class="ci-v">${H(e.date||"—")}</span></div>`;
+rpt+=`<div class="ci-row"><span class="ci-l">Surface</span><span class="ci-v">${e.surface?e.surface+" m²":"—"}</span></div>`;
+if(e.floor)rpt+=`<div class="ci-row"><span class="ci-l">Étage</span><span class="ci-v">${H(e.floor)}</span></div>`;
+rpt+=`<div class="ci-row"><span class="ci-l">Locataire</span><span class="ci-v">${H(e.tenant||"—")}</span></div>`;
+rpt+=`<div class="ci-row"><span class="ci-l">Bailleur</span><span class="ci-v">${H(e.owner||"—")}</span></div>`;
+if(e.mandataire)rpt+=`<div class="ci-row"><span class="ci-l">Mandataire</span><span class="ci-v">${H(e.mandataire)}</span></div>`;
+rpt+=`<div class="ci-row"><span class="ci-l">Pièces</span><span class="ci-v">${e.rooms.length}</span></div>`;
+rpt+=`<div class="ci-row"><span class="ci-l">Photos</span><span class="ci-v">${photoReg.length}</span></div>`;
+rpt+=`</div>`;
+rpt+=`<div class="cover-gen">Document généré le ${genDate} à ${genTime}</div>`;
+rpt+=`</div>`;
 
-// Info grid
+// ═══ SOMMAIRE ═══
+rpt+=`<div class="page-header"><h1>ÉTAT DES LIEUX${e.type==="Sortie"?" DE SORTIE":" D'ENTRÉE"} — ${H(e.name)}</h1></div>`;
+
+// Table des matières
+rpt+=`<div class="toc"><div class="toc-title">Sommaire</div>`;
+rpt+=`<div class="toc-row"><span class="toc-l">1. Informations générales</span><span class="toc-r"></span></div>`;
+if(e.ck&&Object.keys(e.ck).some(k=>e.ck[k]))rpt+=`<div class="toc-row"><span class="toc-l">2. Remise des clés, compteurs & équipements</span><span class="toc-r"></span></div>`;
+e.rooms.forEach((r,ri)=>{const np=photoReg.filter(x=>x.room===r.name).length;rpt+=`<div class="toc-row"><span class="toc-l">${ri+3}. ${H(r.name)}</span><span class="toc-r">${r.elements.length} éléments${np?" · "+np+" photo"+(np>1?"s":""):""}</span></div>`});
+rpt+=`<div class="toc-row"><span class="toc-l">Signatures</span><span class="toc-r"></span></div>`;
+if(photoReg.length)rpt+=`<div class="toc-row"><span class="toc-l" style="color:#1e40af;font-weight:700">Annexe photographique</span><span class="toc-r">${photoReg.length} photo${photoReg.length>1?"s":""}</span></div>`;
+rpt+=`</div>`;
+
+// ═══ 1. INFOS ═══
+rpt+=`<div class="section-title">1. Informations générales</div>`;
 rpt+=`<div class="info-grid">`;
 const fields=[["Adresse du bien",e.address],["Nom / Référence",e.name],["Surface",e.surface?e.surface+" m²":"—"],["Étage",e.floor||"—"],["Nom du locataire",e.tenant||"—"],["Téléphone",e.phone||"—"],["Email",e.email||"—"],["Nom du bailleur",e.owner||"—"]];
-if(e.mandataire)fields.push(["Mandataire (si applicable)",e.mandataire]);
+if(e.mandataire)fields.push(["Mandataire",e.mandataire]);
 if(e.type==="Sortie"&&e.entryRefDate)fields.push(["Date EDL d'entrée de référence",e.entryRefDate]);
 fields.forEach(f=>{rpt+=`<div class="info-cell"><span class="info-label">${f[0]}</span><span class="info-val">${H(f[1])}</span></div>`});
 rpt+=`</div>`;
 
-// Checklist
+// ═══ 2. CHECKLIST ═══
 if(e.ck&&Object.keys(e.ck).some(k=>e.ck[k])){
-rpt+=`<div class="section-title">Remise des clés, compteurs & équipements</div><table class="ck-table">`;
+rpt+=`<div class="section-title">2. Remise des clés, compteurs & équipements</div><table class="ck-table">`;
 CK.forEach(it=>{const v=e.ck[it.id];if(v)rpt+=`<tr><td>${H(it.l)}</td><td>${it.t==="check"?"✓ Conforme":H(v)}</td></tr>`});
 rpt+=`</table>`}
 
-// Rooms
+// ═══ 3+. PIÈCES (sans photos inline, avec références annexe) ═══
 e.rooms.forEach((r,ri)=>{
 const filled=r.elements.filter(el=>el.eE!=="—"||el.eS!=="—").length;
-rpt+=`<div class="section-title">${H(r.name)}<span>${filled}/${r.elements.length} éléments renseignés</span></div>`;
-if(r.photos?.length){rpt+=`<div class="room-photos">`;r.photos.forEach(p=>{if(pm[p])rpt+=`<img src="${pm[p]}">`});rpt+=`</div>`}
-rpt+=`<table class="el-table"><thead><tr><th style="width:20%">Élément</th><th style="width:12%">État entrée</th><th style="width:18%">Observations</th><th style="width:12%">État sortie</th><th style="width:18%">Observations</th><th style="width:20%">Photos</th></tr></thead><tbody>`;
+const roomPhRefs=photoReg.filter(x=>x.room===r.name&&!x.element);
+const roomRefStr=roomPhRefs.length?` — <span class="ph-ref">Photos : ${roomPhRefs.map(x=>x.idx).join(", ")}</span>`:"";
+rpt+=`<div class="section-title">${H(r.name)}<span>${filled}/${r.elements.length} éléments renseignés${roomRefStr}</span></div>`;
+rpt+=`<table class="el-table"><thead><tr><th style="width:22%">Élément</th><th style="width:12%">État entrée</th><th style="width:22%">Observations entrée</th><th style="width:12%">État sortie</th><th style="width:22%">Observations sortie</th><th style="width:10%">Photos</th></tr></thead><tbody>`;
 r.elements.forEach(el=>{
 const isDiff=el.eE!=="—"&&el.eS!=="—"&&el.eE!==el.eS;
+const allPh=[...(el.pE||[]),...(el.pS||[])];
+const phRefNums=allPh.map(p=>{const f=photoReg.find(x=>x.pid===p);return f?f.idx:null}).filter(Boolean);
+const phRefStr=phRefNums.length?phRefNums.join(", "):"—";
 rpt+=`<tr${isDiff?' class="diff"':""}>`;
 rpt+=`<td style="font-weight:600">${H(el.name)}</td>`;
 rpt+=`<td class="etat" style="color:${eColor(el.eE)}">${eDot(el.eE)}${el.eE==="—"?"—":H(el.eE)}</td>`;
 rpt+=`<td class="obs">${H(el.oE)||"—"}</td>`;
 rpt+=`<td class="etat" style="color:${eColor(el.eS)}">${eDot(el.eS)}${el.eS==="—"?"—":H(el.eS)}</td>`;
 rpt+=`<td class="obs">${H(el.oS)||"—"}</td>`;
-rpt+=`<td><div class="el-photos">`;
-(el.pE||[]).forEach(p=>{if(pm[p])rpt+=`<img src="${pm[p]}">`});
-(el.pS||[]).forEach(p=>{if(pm[p])rpt+=`<img src="${pm[p]}">`});
-rpt+=`</div></td></tr>`});
+rpt+=`<td style="text-align:center"><span class="ph-ref">${phRefStr}</span></td>`;
+rpt+=`</tr>`});
 rpt+=`</tbody></table>`});
 
-// Signatures
-rpt+=`<div class="section-title">Signatures</div><div class="sig-section">`;
-// Locataire
-rpt+=`<div class="sig-block"><div class="sig-role">Le locataire</div><div class="sig-name">${H(e.tenant||"")}</div><div class="sig-mention">Je reconnais exactes les constatations ci-dessus sur l'état du logement</div>`;
+// ═══ SIGNATURES ═══
+rpt+=`<div class="section-title">Signatures</div>`;
+rpt+=`<p style="font-size:10px;color:#6b7280;margin-bottom:10px">Les soussignés reconnaissent exactes les constatations ci-dessus sur l'état du logement.</p>`;
+rpt+=`<div class="sig-section">`;
+rpt+=`<div class="sig-block"><div class="sig-role">Le locataire</div><div class="sig-name">${H(e.tenant||"")}</div><div class="sig-mention">Lu et approuvé — "Bon pour accord"</div>`;
 if(e.sigs?.loc)rpt+=`<img src="${e.sigs.loc}"><div class="sig-date">${H(e.sigs.locD||"")}</div>`;
 else rpt+=`<div class="sig-empty">Signature</div>`;
 rpt+=`</div>`;
-// Bailleur
-rpt+=`<div class="sig-block"><div class="sig-role">Le bailleur</div><div class="sig-name">${H(e.owner||"")}</div><div class="sig-mention">Je reconnais exactes les constatations ci-dessus sur l'état du logement</div>`;
+rpt+=`<div class="sig-block"><div class="sig-role">Le bailleur</div><div class="sig-name">${H(e.owner||"")}</div><div class="sig-mention">Lu et approuvé — "Bon pour accord"</div>`;
 if(e.sigs?.bail)rpt+=`<img src="${e.sigs.bail}"><div class="sig-date">${H(e.sigs.bailD||"")}</div>`;
 else rpt+=`<div class="sig-empty">Signature</div>`;
 rpt+=`</div></div>`;
 
-// Footer
-rpt+=`<div class="footer"><span>État des lieux — ${H(e.name)} — ${H(e.address)}</span><span>Document généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span></div>`;
+// Footer corps
+rpt+=`<div class="footer"><span>État des lieux — ${H(e.name)} — ${H(e.address)}</span><span>${genDate} — ${genTime}</span></div>`;
+
+// ═══ ANNEXE PHOTOGRAPHIQUE ═══
+if(photoReg.length){
+rpt+=`<div class="annexe-break"></div>`;
+rpt+=`<div class="annexe-header">ANNEXE PHOTOGRAPHIQUE</div>`;
+rpt+=`<div class="annexe-sub">${photoReg.length} photo${photoReg.length>1?"s":""} — ${H(e.name)} — ${H(e.address)}</div>`;
+
+// Group photos by room
+const roomGroups={};photoReg.forEach(p=>{if(!roomGroups[p.room])roomGroups[p.room]=[];roomGroups[p.room].push(p)});
+Object.keys(roomGroups).forEach(rn=>{
+rpt+=`<div class="section-title" style="margin-top:14px">${H(rn)}<span>${roomGroups[rn].length} photo${roomGroups[rn].length>1?"s":""}</span></div>`;
+rpt+=`<div class="photo-grid">`;
+roomGroups[rn].forEach(p=>{
+const typeClass=p.type==="Entrée"?"pc-type-e":p.type==="Sortie"?"pc-type-s":"pc-type-g";
+rpt+=`<div class="photo-card"><img src="${p.src}"><div class="pc-info"><div class="pc-num">Photo ${p.idx}</div><div class="pc-room">${H(p.room)}</div>`;
+if(p.element)rpt+=`<div class="pc-el">${H(p.element)}</div>`;
+rpt+=`<div class="pc-type ${typeClass}">${H(p.type)}</div></div></div>`});
+rpt+=`</div>`});
+
+// Annexe footer
+rpt+=`<div class="footer"><span>Annexe photographique — ${H(e.name)} — ${H(e.address)}</span><span>${genDate} — ${genTime}</span></div>`;
+}
 
 // Open in new window for clean print
 const w=window.open("","_blank");
