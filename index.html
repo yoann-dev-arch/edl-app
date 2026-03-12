@@ -291,8 +291,8 @@ else if(tv.startsWith("t")){const ti=parseInt(tv.slice(1));const tpl=ldT()[ti];i
 S.edls.push(ne);autoSave();S.showNew=false;S.cur=S.edls.length-1;S.view="edit";S.nType="Entrée";R();ts("EDL créé")};
 
 else if(a==="oEdl")el.onclick=()=>{S.cur=+el.dataset.i;S.view="edit";S.cr=0;R()};
-else if(a==="dup")el.onclick=()=>{const sr=S.edls[+el.dataset.i],dp=JSON.parse(JSON.stringify(sr));dp.id=uid2();dp.name+=" (copie)";dp._le=0;S.edls.push(dp);autoSave();R();ts("Dupliqué")};
-else if(a==="askDel")el.onclick=()=>{S.cdel={t:"edl",i:+el.dataset.i};R()};
+else if(a==="dup")el.onclick=(ev)=>{ev.stopPropagation();const sr=S.edls[+el.dataset.i],dp=JSON.parse(JSON.stringify(sr));dp.id=uid2();dp.name+=" (copie)";dp._le=0;S.edls.push(dp);autoSave();R();ts("Dupliqué")};
+else if(a==="askDel")el.onclick=(ev)=>{ev.stopPropagation();S.cdel={t:"edl",i:+el.dataset.i};R()};
 else if(a==="cDel")el.onclick=()=>{S.cdel=null;R()};
 else if(a==="xDel")el.onclick=()=>{const de=S.edls[S.cdel.i];if(de){de.rooms.forEach(r=>{(r.photos||[]).forEach(p=>dP(p));r.elements.forEach(el=>{(el.pE||[]).forEach(p=>dP(p));(el.pS||[]).forEach(p=>dP(p))})})};S.edls.splice(S.cdel.i,1);autoSave();S.cdel=null;R();ts("Supprimé")};
 
@@ -347,7 +347,7 @@ else if(a==="fDif")el.onclick=()=>{S.fDiff=true;R()};
 else if(a==="xPdf")el.onclick=()=>expPdf();
 else if(a==="xJson")el.onclick=()=>expJson();
 else if(a==="xHtml")el.onclick=()=>expHtml();
-else if(a==="expQ")el.onclick=()=>{S.cur=+el.dataset.i;expJson()};
+else if(a==="expQ")el.onclick=(ev)=>{ev.stopPropagation();S.cur=+el.dataset.i;expJson()};
 else if(a==="impJ")el.onclick=()=>document.getElementById("ji").click();
 });
 const ne=document.getElementById("neN");if(ne)ne.onkeydown=e=>{if(e.key==="Enter"){const n=ne.value.trim();if(n){cRoom().elements.push(mkEl(n));autoSave();S.showAE=false;R();ts("Ajouté")}}}}
